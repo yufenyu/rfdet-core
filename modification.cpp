@@ -29,7 +29,7 @@ int DiffModification::record(AddressMap* ws){
 		DEBUG_MSG("Thread %d: record pageid = %d\n", me->tid, pageid);
 		size_t pageaddr = pageid << LOG_PAGE_SIZE;
 		AddressPage* page = ws->pages[pageid];
-		ASSERT(page != NULL, "tid = %d, pageid = %x, tpage = %x\n", me->tid, pageid, page)
+		ASSERT(page != NULL, "tid = %d, pageid = %x, tpage = %p\n", me->tid, pageid, page)
 		ws->pages[pageid] = NULL;
 		calcPageDiffs(page, (void*)pageaddr);
 		metadata->freePage(page);
@@ -172,10 +172,9 @@ void DiffModification::push_diff_slow(void* addr, int value){
 int DiffModification::calcPageDiffs(void* tpage, void* wpage){
 	//int* out = (int*)res;
 	if(tpage == 0 || wpage == 0){
-		VATAL_MSG("tpage = %x, wpage = %x\n", tpage, wpage);
+		VATAL_MSG("tpage = %p, wpage = %p\n", tpage, wpage);
 		exit(0);
 	}
-	DEBUG_MSG("calcPageDiffs: begin. tpage = %x, wpage = %x, log = %x\n", tpage, wpage, log);
 	int j = 0;
 //#if defined (BYTE_SIZE_DIFF)
 #if (DIFF_GRANULARITY_CONFIG == _GRANULARITY_BYTE_SIZE)

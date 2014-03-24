@@ -213,7 +213,7 @@ int MProtectStrategy::writeMemory(void* addr, size_t len){
 		//ASSERT(page == NULL, "page = %x, tid = %d\n", page, me->tid);
 		//printf("Thread %d take snapshot of memory %d\n", me->tid, pageid);
 		AddressPage* page = (AddressPage*)metadata->allocPage();
-		ASSERT(page != NULL, "page = %x, tid = %d\n", page, me->tid);
+		ASSERT(page != NULL, "page = %p, tid = %d\n", page, me->tid);
 		//printf("Thread %d: Set pageid(%x) to page(%x)\n", me->tid, pageid, page);
 		writeSet.pages[pageid] = page;
 		void* pageaddr = (void*)((size_t)addr & __PAGE_MASK);
@@ -258,7 +258,7 @@ void segvHandle(int signum, siginfo_t * siginfo, void * context)
     else{
     	//SEGV_MAPERR = 1,		/* Address not mapped to object.  */
 
-    	VATAL_MSG("HBDet error: Thread %d cannot handle signal code(%d), sig_addr=%x, signal_up = %d\n",
+    	VATAL_MSG("HBDet error: Thread %d cannot handle signal code(%d), sig_addr=%p, signal_up = %d\n",
                                 me->tid, siginfo->si_code, siginfo->si_addr, tmp_signal_up);
     	//dumpStack();
     	while(1){}
@@ -296,7 +296,7 @@ void MProtectStrategy::init()
 
 void MProtectStrategy::protectMemory(void* addr, size_t size){
 	if(0 != mprotect((void*)PAGE_ALIGN_DOWN(addr), size, PROT_READ)){
-		printf("mprotect error: addr = %x, size = %d\n", addr, size);
+		VATAL_MSG("mprotect error: addr = %p, size = %zu\n", addr, size);
 		_exit(1);
 	}
 }
@@ -304,7 +304,7 @@ void MProtectStrategy::protectMemory(void* addr, size_t size){
 void MProtectStrategy::unprotectMemory(void* addr, size_t size){
 	if(0 != mprotect((void*)PAGE_ALIGN_DOWN(addr), size, PROT_READ | PROT_WRITE))
 	{
-		printf("mprotect error: addr = %x, size = %d\n", addr, size);
+		VATAL_MSG("mprotect error: addr = %p, size = %zu\n" , addr, size);
 		_exit(1);
 	}
 	ASSERT(instance != NULL, "")

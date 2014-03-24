@@ -19,13 +19,15 @@
  * @Design: Each time the clock is increased, it is potential to flush the diff to an new log entry.
  *
  */
+#include<stdint.h>
+
 
 class vector_clock{
 #define MAX_STRING_LENGTH 128
 public:
 	int owner;
 private:
-	unsigned long clocks[MAX_THREAD_NUM];
+	uint64_t clocks[MAX_THREAD_NUM];
 private:
 	char* toString(int num){
 		static char string_buf[MAX_STRING_LENGTH];
@@ -37,10 +39,10 @@ private:
 		index += sprintf(buf, "<");
 		for(int i = 0; i < num; i++){
 			if(i == num - 1){
-				index += sprintf(buf + index, "%d>", this->clocks[i]);
+				index += sprintf(buf + index, "%lu>", this->clocks[i]);
 			}
 			else{
-				index += sprintf(buf + index, "%d, ", this->clocks[i]);
+				index += sprintf(buf + index, "%lu, ", this->clocks[i]);
 			}
 		}
 		buf[index] = 0;
@@ -52,10 +54,10 @@ private:
 		index += sprintf(buf, "<");
 		for(int i = 0; i < num; i++){
 			if(i == num - 1){
-				index += sprintf(buf + index, "%d>", this->clocks[i]);
+				index += sprintf(buf + index, "%lu>", this->clocks[i]);
 			}
 			else{
-				index += sprintf(buf + index, "%d, ", this->clocks[i]);
+				index += sprintf(buf + index, "%lu, ", this->clocks[i]);
 			}
 		}
 		buf[index] = 0;
@@ -63,11 +65,11 @@ private:
 	}
 public:
 	vector_clock(){
-		memset(clocks, 0, sizeof(unsigned long) * MAX_THREAD_NUM);
+		reset();
 	}
 	void DEBUG_VALUE(){
 #ifdef _DEBUG
-		printf("<%d, %d, %d>", clocks[0], clocks[1], clocks[2]);
+		printf("<%lu, %lu, %lu>", clocks[0], clocks[1], clocks[2]);
 #endif
 	}
 #define VECTOR_CLOCK_LEN 5

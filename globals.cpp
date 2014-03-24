@@ -100,7 +100,7 @@ void * alloc_global_private(int size)
 {
 	//printf("before alloc:  %x----%x\n",pma->start,pma->last);
 
-	if((unsigned int)(pma->last) + size - (unsigned int)(pma->start) > 4096)
+	if((uintptr_t)(pma->last) + size - (uintptr_t)(pma->start) > 4096)
 	{
 		printf("error in threadprivate.cpp\n");
 		_exit(1);

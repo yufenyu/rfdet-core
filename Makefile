@@ -2,9 +2,12 @@
 # @Done: (1) use personal independent configs
 #       (2) use codes '%'(onefile) '*'(allfile) '$<'(source) '$@'(target)
 #
+
 include makefile.local.config
+CC=gcc
+CPP=g++
 #CFLAGS=-c -O3 -fPIC -g -rdynamic
-CFLAGS=-c -O3 -fPIC -g -I ./Heap-Layers-master -DNDEBUG
+CFLAGS=-c -O3 -fPIC -g -I ./Heap-Layers-master -DNDEBUG -std=c++0x
 LDFLAGS=-ldl -lpthread -O3
 
 #SRC=globals.cpp signal.cpp difflog.cpp runtime.cpp heaps.cpp vecotrclock.cpp hook.cpp simpleheap.cpp globalprivate.cpp
@@ -21,10 +24,10 @@ all:${TARGET}
 
 
 ${TARGET}: ${OBJS}
-	g++ -shared ${LDFLAGS} ${OBJS} -o ${TARGET}
+	${CPP} -shared ${LDFLAGS} ${OBJS} -o ${TARGET}
 
 %.o: %.cpp *.h
-	g++ ${CFLAGS} -o $@ $<
+	${CPP} ${CFLAGS} -o $@ $<
 	
 #hbdet.o: hbdet.cpp ${HEADERS}
 #	g++ ${CFLAGS} hbdet.cpp -o hbdet.o

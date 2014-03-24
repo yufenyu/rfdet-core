@@ -13,7 +13,7 @@
 
 
 typedef struct _thread_info_t {
-	int tid;
+	thread_id_t tid;
 	pid_t pid; /*The pid of this thread in the OS kernal.*/
 	struct _thread_info_t* next;
 	struct _thread_info_t* pre;
@@ -31,23 +31,24 @@ typedef struct _thread_info_t {
 	struct _thread_info_t* nextlockwaiter; /*Point to the next thread which waits for the same lock.*/
 
 	bool kernal_malloc; /*indicate whether this thread should malloc from meta data space.*/
-	int incs; //thread is in critical section.
+	uint32_t incs; /* Increase by 1 when entering a critical section, decrease by 1 when leaving a critical section. */
+	bool insync; /* If thread is performing synchronization in the runtime */
 	bool ingc; /*thread is performing GC.*/
 	/*TODO: use status instead*/
 	bool finished;
-	int insync; //if thread is performing synchronization.
+	
 
-	int gc_count;
-	uint64 numpagefault; //profiling
+	uint64_t gc_count;
+	uint64_t numpagefault; //profiling
 
 #ifdef _PROFILING
-	uint64 gc_time;
-	uint64 signaltime;
-	uint64 writelogtime;
-	uint64 readlogtime;
-	uint64 protecttime;
-	uint64 paracount;
-	uint64 serialcount;
+	uint64_t gc_time;
+	uint64_t signaltime;
+	uint64_t writelogtime;
+	uint64_t readlogtime;
+	uint64_t protecttime;
+	uint64_t paracount;
+	uint64_t serialcount;
 #endif
 
 	SliceManager slices;         /*Diff log for this thread.*/

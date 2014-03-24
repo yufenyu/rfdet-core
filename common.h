@@ -67,4 +67,6 @@ public:
 };
 
 
+typedef int32_t thread_id_t;
+
 #endif /* COMMON_H_ */

@@ -185,8 +185,7 @@ void * malloc(size_t sz) {
 		//DEBUG("Pre-initialization malloc call forwarded to mmap");
 		DEBUG_MSG("HBDet: malloc is not initialized!\n");
 		ptr = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-		if(ptr == (void *)-1)
-		{
+		if(ptr == NULL){
 			printf("error in hbdet.cpp 127\n");
 			_exit(1);
 		}
@@ -235,7 +234,7 @@ void * valloc(size_t sz) {
 	}
 	else if(kernal_malloc){
 		//ptr = metadata->meta_alloc(sz);
-		printf("HBDet: error !!!!!!!!!kernal valloc: ptr = %x\n", ptr);
+		printf("HBDet: error !!!!!!!!!kernal valloc: ptr = %p\n", ptr);
 		exit(1);
 	}
 	else{

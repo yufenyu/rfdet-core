@@ -221,10 +221,7 @@ public:
 			chunkmap[i].start = (page_data_t*)&chunks[i];
 			memset(chunkmap[i].pagemap, 0, PAGES_IN_CHUNK);
 		}
-		//RUNTIME::protectMemory(chunks, totalChunkNum * SNAPSHOT_CHUNK_SIZE, PROT_READ);
-		DEBUG_MSG("Snapshot Heap: from %x to %x\n", start_addr, start_addr + SNAPSHOT_HEAP_SIZE);
-		DEBUG_MSG("Create SnapshotMemory OK. Snapshot heap size = %d, chunksize = %d, totalChunkNum = %d\n",
-				SNAPSHOT_HEAP_SIZE, SNAPSHOT_CHUNK_SIZE, totalChunkNum);
+
 	}
 
 

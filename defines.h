@@ -145,7 +145,7 @@ typedef struct runtime_data {
 */
 
 #define STACK_SIZE (1024 * 1024)
-#define HEAP_SIZE (1048576UL * (1024 + 512))
+#define HEAP_SIZE (1048576UL * (512))
 #define HEAP_CHUNK_SIZE (1048576UL)
 
 #define CHUNK_SIZE (1048576UL * 8) //unused

@@ -40,16 +40,14 @@ class Slice{
 private:
 	//bool used; //whether this entry is used.
 	int lock;
-	int refcount;
-	int owner;
-	//PageMemory* phead;
-	//PageMemory* pcursor;
-	//PageMemory* pageIterator;
+	uint32_t refcount;
+	thread_id_t owner;
+
 //#define phead modifications.phead
 //#define pcursor modifications.pcursor
 public:
 	//static int global_id;
-	int id;
+	int id;  //maybe unused
 
 	int status;
 	Slice* next;
@@ -79,6 +77,7 @@ public:
 		refcount = 0;
 		status = SLICE_UNUSED;
 	}
+	
 	Slice(){
 		lock = 0;
 		//oldowner = INVALID_THREAD_ID;
@@ -147,14 +146,6 @@ public:
 
 	//PageMemory* allocateStorePage();
 };
-
-
-
-typedef struct _ReadList{
-	Slice** entrylist;
-	int freeslot;
-	int usedhead;
-} ReadList;
 
 class SlicePointer {
 
@@ -234,7 +225,6 @@ public:
 	//int lock;
 	//int semaphore;
 	//vector_clock maxTime;
-	//ReadList readlist[MAX_THREAD_NUM];
 
 
 public:

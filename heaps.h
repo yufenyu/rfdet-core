@@ -179,7 +179,9 @@ private:
 
 
 #define MASK_1_000 0x80000000
-#define MASK_0_111 0X7fffffff
+#define MASK_0_111 0x7fffffff
+	//#define MASK_0_111 ((uintptr_t(-1)) >> 1)
+	//#define MASK_1_000 (~(MASK_0_111))
 #define CHUNKS_IN_HEAP (MY_HEAP_SIZE/MY_CHUNK_SIZE)
 public:
 	enum { Alignment = MmapWrapper::Alignment };
@@ -190,10 +192,10 @@ public:
 					map(NULL),
 					map_end(NULL){
 		void* raw_mem = mmap(NULL, MY_HEAP_SIZE , PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-		ASSERT(raw_mem != NULL, "");
+		ASSERT(raw_mem != MAP_FAILED, "");
 		init(raw_mem);
 
-		DEBUG_MSG("Init BigHeapSource...\n");
+		DEBUG_MSG("Init BigHeapSource, raw_mem = %p, MASK_0_111 = %p.\n", raw_mem, (void*)MASK_0_111);
 	}
 
 	virtual void* start(){
@@ -235,6 +237,7 @@ public:
 			next = getNext(next);
 		}
 		//printf("In malloc\n");
+		ASSERT(false, "Can not allocate more memory!")
 		return NULL;
 
 	}
@@ -272,7 +275,7 @@ public:
 
 	inline void* getData(MapItemType* code){
 		//int len = getLen(code);
-		char* ret = data + ((size_t)code - (size_t)map) / sizeof(int) * MY_CHUNK_SIZE;
+		char* ret = data + ((uintptr_t)code - (uintptr_t)map) / sizeof(MapItemType) * MY_CHUNK_SIZE;
 		return ret;
 	}
 

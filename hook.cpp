@@ -18,6 +18,10 @@
 
 #include "hook.h"
 
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#define typeof decltype
+#endif
+
 // libc functions
 void* (*real_mmap)(void*, size_t, int, int, int, off_t);
 void* (*real_malloc)(size_t);

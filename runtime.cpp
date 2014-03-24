@@ -444,7 +444,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 		me->vclock.incClock(&lock->vtime, old_owner);
 		//serialcount = HBRuntime::restoreSnapshot(old_owner, &old_time, &me->vclock, HB_REASON_LOCK);
 		serialcount = STRATEGY::doPropagation(old_owner, &old_time, &me->vclock, SYNC_LOCK);
-		DEBUG_MSG(stderr, "Thread %d total merged modifications: %d\n", me->tid, paracount + serialcount);
+		DEBUG_MSG("Thread %d total merged modifications: %d\n", me->tid, paracount + serialcount);
 		//dump_data();
 	}
 

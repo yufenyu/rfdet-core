@@ -20,7 +20,7 @@
 #include "structures.h"
 #include "thread.h"
 
-typedef unsigned long long uint64;
+
 typedef struct _LockItem{
 	int tid;
 	int next;
@@ -48,10 +48,10 @@ class KernalSpace : public ImmutableMemory<META_KERNAL_SPACE_SIZE> {};
 class RuntimeDataMemory : public Memory {
 public:
   //volatile unsigned long thread_index;
-	volatile unsigned int thread_slot;
+	volatile uint32_t thread_slot;
 	int lock;
 	int barrierlock;
-	int barriercount;
+	uint32_t barriercount;
 	volatile int barrierfrontdoor;
 	volatile int barrierbackdoor;
 	int slicelock;
@@ -65,11 +65,11 @@ public:
 	SliceSpace slicespace;
 
 	/*profiling*/
-	unsigned int numpagefault;
-	uint64 allocpages;
-	uint64 memfootprint;
-	uint64 allocated_size;
-	int gc_count;
+	uint32_t numpagefault;
+	uint64_t allocpages;
+	uint64_t memfootprint;
+	uint64_t allocated_size;
+	uint32_t gc_count;
 
 	/**/
 	KernalSpace kernaldata;
