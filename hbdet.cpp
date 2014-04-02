@@ -336,7 +336,7 @@ int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t * attr)
 }
 
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
-	//printf("HBDet: pthread_mutex_lock\n");
+	printf("HBDet: Thread (%d) enter pthread_mutex_lock\n", me->tid);
 	if(!initialized){
 		return 0;
 	}
@@ -465,6 +465,7 @@ int pthread_barrier_wait(pthread_barrier_t* barrier) {
 //AddressPage* pages[PAGE_COUNT];
 //__thread int pageNum = 0;
 /*Recording the write set by using compile-time instrumentation. */
+#ifdef UNUSED
 void WS_RecordWrites(void* addr, size_t len){
 	//ASSERT(initialized, "")
 	//ASSERT(me->writeSet != NULL, "")
@@ -502,6 +503,7 @@ void WS_RecordWrites(void* addr, size_t len){
 
 //	return true;
 }
+#endif
 
 }//extern "C"
 

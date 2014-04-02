@@ -25,15 +25,16 @@ int DiffModification::record(AddressMap* ws){
 	DEBUG_MSG("Thread %d record diffs: pageNum = %d\n", me->tid, ws->pageNum);
 	int ret = ws->pageNum;
 	for(int i = 0; i < ws->pageNum; i ++){
-		int pageid = ws->writtenPages[i];
+		uintptr_t pageid = ws->writtenPages[i].pageid;
 		DEBUG_MSG("Thread %d: record pageid = %d\n", me->tid, pageid);
 		size_t pageaddr = pageid << LOG_PAGE_SIZE;
-		AddressPage* page = ws->pages[pageid];
+		AddressPage* page = (AddressPage*)ws->writtenPages[i].snapshot;
 		ASSERT(page != NULL, "tid = %d, pageid = %x, tpage = %p\n", me->tid, pageid, page)
-		ws->pages[pageid] = NULL;
+		//ws->pages[pageid] = NULL;
 		calcPageDiffs(page, (void*)pageaddr);
 		metadata->freePage(page);
 	}
+	DEBUG_MSG("Thread %d record diffs OK\n", me->tid);
 	return ret;
 }
 
@@ -170,6 +171,7 @@ void DiffModification::push_diff_slow(void* addr, int value){
  * @param wpage: working page that stores the modified page.
  */
 int DiffModification::calcPageDiffs(void* tpage, void* wpage){
+	std::cout << "tpage = " << tpage << ", wpage = " << wpage << std::endl;
 	//int* out = (int*)res;
 	if(tpage == 0 || wpage == 0){
 		VATAL_MSG("tpage = %p, wpage = %p\n", tpage, wpage);

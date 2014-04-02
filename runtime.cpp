@@ -94,7 +94,9 @@ int thread_entry_point(void* args){
 	//localbumppointer.initOnThreadEntry();
 	threadprivateStrategy.initOnThreadEntry();
 
-#ifdef _DEBUG
+
+	
+#ifdef _GDB_DEBUG
 	printf("Thread(%d): sleep for attach...\n", me->tid, me->pid);
 	sleep(20);
 #endif
@@ -239,15 +241,18 @@ int HBRuntime::protectSharedData(){
 	uint64 starttime = Util::copy_time();
 #endif
 
+	printf("Protect globals\n");
 	protect_globals();/*Protect the global variables.*/
 	//protect_heap();
+	printf("Protect heap\n");
 	Heap::getHeap()->protect_heap();
 	//protectHeap();
-
+	
 #ifdef _PROFILING
 	uint64 endtime = Util::copy_time();
 	me->protecttime += (endtime - starttime);
 #endif
+	printf("Heap protected\n");
 	return 0;
 }
 
@@ -459,7 +464,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 		STRATEGY::beginSlice();
 	}
 
-	//me->insync = false;
+	DEBUG_MSG("Thread %d leaving rawMutexLock\n", me->tid);
 	return 0;
 }
 
@@ -524,7 +529,7 @@ int HBRuntime::threadCreate (pthread_t * pid, const pthread_attr_t * attr, void 
 	bool singlethread = isSingleThreaded();
 
 	Util::spinlock(&metadata->lock);
-	int tid = metadata->thread_slot;
+	thread_id_t tid = metadata->thread_slot;
 	if(tid >= MAX_THREAD_NUM){
 		tid = INVALID_THREAD_ID;
 	}
@@ -583,12 +588,16 @@ int HBRuntime::threadCreate (pthread_t * pid, const pthread_attr_t * attr, void 
 	//printf("--thread %d leave pthread_create\n", me->tid);
 
 	if(singlethread){//changing from single thread to multithreads.
+		printf("In protectSharedData()\n");
 		protectSharedData();
+		printf("Thread (%d): After protectSharedData()\n", me->tid);
 	}
 	else{
 		//TODO: takeSnapshot & flushLog
 		//beginSlice();
 	}
+	printf("Thread (%d): After protectSharedData() ................\n", me->tid);
+	NORMAL_MSG("Thread (%d) Create Thread (%d) OK!\n\n", me->tid, tid);
 	return 0;
 }
 
@@ -707,7 +716,7 @@ int lockLineup(InternalLock* lock, vector_clock* predict_time, int* owner){
  *			 happen-before relation with the paths of the merging logs!
  **/
 int HBRuntime::mutexLock(pthread_mutex_t * mutex){
-	//NORMAL_MSG("Thread %d lock %x\n", me->tid, mutex);
+	DEBUG_MSG("Thread %d lock %x\n", me->tid, mutex);
 	tryGC();
 	me->insync = true;
 	int ret = rawMutexLock(mutex, SYNC_LOCK, true);

@@ -44,7 +44,7 @@ int Strategy::deliver(int from, vector_clock* old_time, vector_clock* new_time, 
 	//thread_info_t* latter = &meta_data->threads[to];
 	thread_info_t* latter = me;
 	int count = 0;
-	DEBUG_MSG("Thread(%d): HBRuntime::Merge: current time = %s\n", me->tid, new_time->toString());
+	//DEBUG_MSG("Thread(%d): HBRuntime::Merge: current time = %s\n", me->tid, new_time->toString());
 
 	/**
 	 *  Important! the loop should be protected by lock, or, we should use local iterators.
@@ -67,7 +67,7 @@ int Strategy::deliver(int from, vector_clock* old_time, vector_clock* new_time, 
 	Slice** logs = former->slices.slicepointer.readerAcquire(&logcount);
 
 
-	DEBUG_MSG("Thread(%d): fetchModify, logcount = %d\n", me->tid, logcount);
+	//DEBUG_MSG("Thread(%d): fetchModify, logcount = %d\n", me->tid, logcount);
 	int validlog = 0;
 	for(int i = 0; i < logcount; i++){
 		Slice* flog = logs[i];
@@ -110,7 +110,7 @@ int Strategy::deliver(int from, vector_clock* old_time, vector_clock* new_time, 
 
 	}
 	former->slices.slicepointer.readerRelease();
-	DEBUG_MSG("Thread(%d): fetchModify, validlog = %d\n", me->tid, validlog);
+	//DEBUG_MSG("Thread(%d): fetchModify, validlog = %d\n", me->tid, validlog);
 	//me->oldtime = *curr_time;
 	return count;
 }
@@ -193,19 +193,12 @@ extern size_t record_size;
 
 /** The signal handler for first writing into a page. */
 int MProtectStrategy::writeMemory(void* addr, size_t len){
-	//if(0 != mprotect((void*)PAGE_ALIGN_DOWN(addr), PAGE_SIZE, PROT_READ | PROT_WRITE))
-	//{
-		//printf("error in signal.cpp 50\n");
-		//_exit(1);
-	//}
-	//size_t hit = PAGE_ALIGN_DOWN((size_t)addr);
-	//size_t low = PAGE_ALIGN_DOWN((size_t)record_addr);
-	//size_t high = PAGE_ALIGN_UP(low + record_size);
-	//if(hit >= low && hit <= high)
-		//fprintf(stderr, "Thread %d write page %x\n", me->tid, addr);
+
 	me->numpagefault ++;
 	unprotectMemory(addr, PAGE_SIZE);
 
+	std::cout << "writeMemory: addr = " << addr << std::endl;
+	
 	size_t pageid = (size_t)addr >> LOG_PAGE_SIZE;
 	//printf("Thread %d handleWrite: pageid = %d, insync = %d\n", me->tid, pageid, me->insync);
 	if(!me->insync){ /*Page fault is caused by modification propagation.*/
@@ -215,10 +208,11 @@ int MProtectStrategy::writeMemory(void* addr, size_t len){
 		AddressPage* page = (AddressPage*)metadata->allocPage();
 		ASSERT(page != NULL, "page = %p, tid = %d\n", page, me->tid);
 		//printf("Thread %d: Set pageid(%x) to page(%x)\n", me->tid, pageid, page);
-		writeSet.pages[pageid] = page;
 		void* pageaddr = (void*)((size_t)addr & __PAGE_MASK);
 		memcpy(page, pageaddr, PAGE_SIZE);
-		writeSet.writePage(pageid);
+		
+		//writeSet.pages[pageid] = page;
+		writeSet.writePage(pageid, page);
 	}
 
 }
@@ -256,7 +250,7 @@ void segvHandle(int signum, siginfo_t * siginfo, void * context)
     	MProtectStrategy::writeMemory(addr, 0);
     }
     else{
-    	//SEGV_MAPERR = 1,		/* Address not mapped to object.  */
+    	//SEGV_MAPERR = 1,		/* Address not mapped to object.*/
 
     	VATAL_MSG("HBDet error: Thread %d cannot handle signal code(%d), sig_addr=%p, signal_up = %d\n",
                                 me->tid, siginfo->si_code, siginfo->si_addr, tmp_signal_up);

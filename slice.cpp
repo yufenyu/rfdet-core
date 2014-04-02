@@ -266,11 +266,7 @@ int SliceManager::GC(){/*Perform garbage collection of logs.*/
 
 	//printf("\n////////////////////////////////Thread(%d): GC start...////////////////////////////////////\n", me->tid);
 
-#ifdef _DEBUG
-	DEBUG_MSG("GC count: %d.\n", me->gc_count);
-	DEBUG_MSG("shared entries before GC: \n");
-	this->debuginfoSharedEntry();
-#endif
+
 #ifdef UNUSED
 	int count = 0;
 	for(int i = 0; i < slicePointerNum; i++){ //There is no modification.
@@ -330,10 +326,7 @@ int SliceManager::GC(){/*Perform garbage collection of logs.*/
 
 	disposeDeads();
 	NORMAL_MSG("Thread(%d): GC finished, Total freed log pages: %d\n", me->tid, count);
-#ifdef _DEBUG
-	DEBUG_MSG("shared entries after GC: \n");
-	this->debuginfoSharedEntry();
-#endif
+
 	//int num1 = freeSlot;
 	//int num = compact();
 	int oldsize = slicepointer.size();
