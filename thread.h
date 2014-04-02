@@ -7,6 +7,7 @@
 
 #ifndef THREAD_H_
 #define THREAD_H_
+#include <atomic>
 #include "defines.h"
 #include "slice.h"
 #include "writeset.h"
@@ -17,7 +18,7 @@ typedef struct _thread_info_t {
 	pid_t pid; /*The pid of this thread in the OS kernal.*/
 	struct _thread_info_t* next;
 	struct _thread_info_t* pre;
-	void* wcond; /*The waited conditional variable.*/
+	std::atomic<void*> wcond; /*The waited conditional variable.*/
 	//unsigned long global_twin_start;
 	//unsigned long global_twin_end;
 	//unsigned long global_diff_log;

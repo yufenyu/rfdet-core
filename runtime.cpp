@@ -1076,7 +1076,7 @@ void InternalCond::enterWaitQueue(thread_info_t* thread){
 
 void InternalCond::Wait(thread_info_t* thread){
 	/* Wait here.*/
-	while(thread->wcond != NULL){
+	while(thread->wcond.load() != NULL){
 		//printf("Cond(%d) wait for a while...\n", me->tid);
 		Util::wait_for_a_while();
 	}

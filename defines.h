@@ -34,7 +34,7 @@
 #define WARNING_MSG_LEVEL 1
 #define VATAL_MSG_LEVEL 0
 #define NO_MSG_LEVEL (-1)
-#define HB_VERBOSE_LEVEL 3
+#define HB_VERBOSE_LEVEL 2
 
 #define _PROFILING
 //#define _DEBUG

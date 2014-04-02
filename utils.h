@@ -41,8 +41,8 @@ using namespace std;
 #define YIELD() pthread_yield()
 
 
-#define PAGE_ALIGN_DOWN(x) (((size_t) (x)) & ~PAGE_MASK__)
-#define PAGE_ALIGN_UP(x) ((((size_t) (x)) + PAGE_MASK__) & ~PAGE_MASK__)
+#define PAGE_ALIGN_DOWN(x) (((uintptr_t) (x)) & ~PAGE_MASK__)
+#define PAGE_ALIGN_UP(x) ((((uintptr_t) (x)) + PAGE_MASK__) & ~PAGE_MASK__)
 
 
 extern int enterpass;
