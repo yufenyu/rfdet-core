@@ -10,6 +10,7 @@
 
 #include "defines.h"
 #include "utils.h"
+#include "common.h"
 
 //#include "snapshot.h"
 //#define USER_SPACE_SIZE 0xc0000000 //3GB user space.
@@ -27,8 +28,8 @@ public:
 
 class PageSnapshot{
 public:
-	size_t pageid;
-	void* snapshot;
+	address_t pageaddr; //the original page 
+	address_t snapshot; //the snapshot page
 };
 
 #define MAX_WRITTEN_PAGE 64000
@@ -37,34 +38,49 @@ class AddressMap {
 private:
 	int tid;
 
-public:
+private:
 	int pageNum;
-	PageSnapshot writtenPages[MAX_WRITTEN_PAGE];
+	PageSnapshot dirtypages[MAX_WRITTEN_PAGE];
 	//AddressPage* pages[PAGE_COUNT];
 public:
-	AddressMap();
-	virtual ~AddressMap();
+	AddressMap() : pageNum(0){}
+	virtual ~AddressMap(){}
 	//size_t find(void* addr);
 	//bool insert(void* addr, size_t len);
-	void clear();
+	void clear(){
+		pageNum = 0;
+	}
 	//void reset();
 	//int dump(AddressStack* stack);
 	bool isEmpty(){
 		return pageNum == 0;
 	}
+	
 	void initOnThreadEntry(int tid){
 		this->tid = tid;
 		pageNum = 0;
 		//reset();
 	}
-	void writePage(size_t pageid, void* spage){
-		ASSERT(pageid != NULL, "pageid = %d\n", pageid)
-		writtenPages[pageNum].pageid = pageid;
-		writtenPages[pageNum].snapshot = spage;
+	
+	void writePage(address_t pageaddr, address_t spage){
+		ASSERT(pageaddr != (address_t)NULL, "pageaddr = %p\n", (void*)pageaddr)
+		dirtypages[pageNum].pageaddr = pageaddr;
+		dirtypages[pageNum].snapshot = spage;
 		pageNum ++;
 		ASSERT(pageNum < MAX_WRITTEN_PAGE, "pageNum = %d\n", pageNum)
 	}
 
+	uint32_t getDirtyPageNum(){
+		return pageNum;
+	}
+	
+	address_t getDirtyPage(uint32_t index){
+		return dirtypages[index].pageaddr;
+	}
+	
+	address_t getDirtyPageSnapshot(uint32_t index){
+		return dirtypages[index].snapshot;
+	}
 	//void dumpSharedRegion(void* pagestart, void* pageend, AddressStack* stack);
 };
 

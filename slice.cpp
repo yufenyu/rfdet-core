@@ -443,7 +443,7 @@ PageMemory* Slice::allocateStorePage(){
 int Slice::recordModifications(){
 	int total = 0;
 	if(writeSet.isEmpty()){
-		DEBUG_MSG("Thread (%d) logDiff: writeSet = %d\n", me->tid, writeSet.pageNum);
+		DEBUG_MSG("Thread (%d) logDiff: writeSet = %d\n", me->tid, writeSet.getDirtyPageNum());
 		return 0;
 	}
 

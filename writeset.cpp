@@ -11,14 +11,7 @@
 #include "common.h"
 #include "heaps.h"
 
-AddressMap::AddressMap() {
-	// TODO Auto-generated constructor stub
-	pageNum = 0;
-}
 
-AddressMap::~AddressMap() {
-	// TODO Auto-generated destructor stub
-}
 
 //size_t AddressMap::find(void* addr){
 //	size_t pageid = (size_t)addr >> LOG_PAGE_SIZE;
@@ -44,13 +37,13 @@ bool AddressMap::insert(void* addr, size_t len){
 	return true;
 }
 */
-void AddressMap::clear(){
+//void AddressMap::clear(){
 	//for(int i = 0; i < pageNum; i++){
 		//size_t pageid = writtenPages[i];
 		//pages[pageid] = NULL;
 	//}
-	pageNum = 0;
-}
+//	pageNum = 0;
+//}
 
 //void AddressMap::reset(){
 	//memset(pages, 0, PAGE_COUNT * 4);

@@ -22,20 +22,20 @@ DiffModification::~DiffModification() {
 
 
 int DiffModification::record(AddressMap* ws){
-	DEBUG_MSG("Thread %d record diffs: pageNum = %d\n", me->tid, ws->pageNum);
-	int ret = ws->pageNum;
-	for(int i = 0; i < ws->pageNum; i ++){
-		uintptr_t pageid = ws->writtenPages[i].pageid;
-		DEBUG_MSG("Thread %d: record pageid = %d\n", me->tid, pageid);
-		size_t pageaddr = pageid << LOG_PAGE_SIZE;
-		AddressPage* page = (AddressPage*)ws->writtenPages[i].snapshot;
-		ASSERT(page != NULL, "tid = %d, pageid = %x, tpage = %p\n", me->tid, pageid, page)
-		//ws->pages[pageid] = NULL;
+	DEBUG_MSG("Thread %d record diffs: pageNum = %d\n", me->tid, ws->getDirtyPageNum());
+	int total = ws->getDirtyPageNum();
+	for(int i = 0; i < total; i ++){
+		address_t pageaddr = ws->getDirtyPage(i);
+		AddressPage* page = (AddressPage*)ws->getDirtyPageSnapshot(i);
+		
+		DEBUG_MSG("Thread %d: record page addr = %d\n", me->tid, pageaddr);
+		ASSERT(page != NULL, "tid = %d, pageaddr = %x, tpage = %p\n", me->tid, pageaddr, page)
+		
 		calcPageDiffs(page, (void*)pageaddr);
 		metadata->freePage(page);
 	}
 	DEBUG_MSG("Thread %d record diffs OK\n", me->tid);
-	return ret;
+	return total;
 }
 
 void DiffModification::resetIterator(LogIterator* iter){

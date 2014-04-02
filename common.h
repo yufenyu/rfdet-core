@@ -68,5 +68,6 @@ public:
 
 
 typedef int32_t thread_id_t;
+typedef uintptr_t address_t;
 
 #endif /* COMMON_H_ */

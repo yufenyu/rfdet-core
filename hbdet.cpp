@@ -59,6 +59,8 @@ void initConstants(void* heap_low){
 void initialize() {
 	NORMAL_MSG("HBDet: initialize...\n");
 
+	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
+	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
 	//VATAL_MSG("HBDet: initialize...\n");
 	//exit(0);
 

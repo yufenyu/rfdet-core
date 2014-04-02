@@ -199,20 +199,20 @@ int MProtectStrategy::writeMemory(void* addr, size_t len){
 
 	std::cout << "writeMemory: addr = " << addr << std::endl;
 	
-	size_t pageid = (size_t)addr >> LOG_PAGE_SIZE;
+	address_t pageaddr = ((address_t)addr >> LOG_PAGE_SIZE) << LOG_PAGE_SIZE;
 	//printf("Thread %d handleWrite: pageid = %d, insync = %d\n", me->tid, pageid, me->insync);
 	if(!me->insync){ /*Page fault is caused by modification propagation.*/
 		//AddressPage* page = writeSet.pages[pageid];
 		//ASSERT(page == NULL, "page = %x, tid = %d\n", page, me->tid);
 		//printf("Thread %d take snapshot of memory %d\n", me->tid, pageid);
-		AddressPage* page = (AddressPage*)metadata->allocPage();
-		ASSERT(page != NULL, "page = %p, tid = %d\n", page, me->tid);
+		address_t page = (address_t)metadata->allocPage();
+		ASSERT(page != (address_t)NULL, "page = %p, tid = %d\n", (void*)page, me->tid);
 		//printf("Thread %d: Set pageid(%x) to page(%x)\n", me->tid, pageid, page);
-		void* pageaddr = (void*)((size_t)addr & __PAGE_MASK);
-		memcpy(page, pageaddr, PAGE_SIZE);
+		//void* pageaddr = (void*)((size_t)addr & __PAGE_MASK);
+		memcpy((void*)page, (void*)pageaddr, PAGE_SIZE);
 		
 		//writeSet.pages[pageid] = page;
-		writeSet.writePage(pageid, page);
+		writeSet.writePage(pageaddr, page);
 	}
 
 }

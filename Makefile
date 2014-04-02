@@ -7,7 +7,8 @@ include makefile.local.config
 CC=gcc
 CPP=g++
 #CFLAGS=-c -O3 -fPIC -g -rdynamic
-CFLAGS=-c -O3 -fPIC -g -I ./Heap-Layers-master -DNDEBUG -std=c++0x -D_GDB_DEBUG
+#USING_GDB=-D_GDB_DEBUG
+CFLAGS=-c -O3 -fPIC -g -I ./Heap-Layers-master -DNDEBUG -std=c++0x ${USING_GDB}
 LDFLAGS=-ldl -lpthread -O3
 
 #SRC=globals.cpp signal.cpp difflog.cpp runtime.cpp heaps.cpp vecotrclock.cpp hook.cpp simpleheap.cpp globalprivate.cpp
