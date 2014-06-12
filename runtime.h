@@ -70,7 +70,8 @@ public:
 	uint64_t memfootprint;
 	uint64_t allocated_size;
 	uint32_t gc_count;
-
+	uint32_t lockcount;
+	
 	/**/
 	KernalSpace kernaldata;
 	MemModSpace modstore; /*Storage for memory modifications in the metadata space*/
@@ -91,6 +92,7 @@ public:
 		memfootprint = 0;
 		allocated_size = 0;
 		gc_count = 0;
+		lockcount = 0;
 	}
 	/**
 	 * All fields should be added before free. TODO: alignment!

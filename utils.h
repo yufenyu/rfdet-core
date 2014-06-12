@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <execinfo.h>
+#include <stdint.h>
 
 #include "defines.h"
 
@@ -65,7 +66,7 @@ public:
 	}
 
 	static bool is_page_aligned(void* addr){
-		if(((size_t)addr & PAGE_MASK__) == 0){
+		if(((uintptr_t)addr & PAGE_MASK__) == 0){
 			return true;
 		}
 		return false;

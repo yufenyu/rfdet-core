@@ -171,7 +171,7 @@ void DiffModification::push_diff_slow(void* addr, int value){
  * @param wpage: working page that stores the modified page.
  */
 int DiffModification::calcPageDiffs(void* tpage, void* wpage){
-	std::cout << "tpage = " << tpage << ", wpage = " << wpage << std::endl;
+	//std::cout << "tpage = " << tpage << ", wpage = " << wpage << std::endl;
 	//int* out = (int*)res;
 	if(tpage == 0 || wpage == 0){
 		VATAL_MSG("tpage = %p, wpage = %p\n", tpage, wpage);

@@ -136,6 +136,7 @@ void finalize() {
 	NORMAL_MSG("Thread(%d) read log time: %lld\n", me->tid, me->readlogtime);
 	NORMAL_MSG("Thread(%d) protect shared data time: %lld\n", me->tid, me->protecttime);
 	NORMAL_MSG("Thread(%d) rate of serial merge: %f.\n", me->tid, (double)me->serialcount/(me->paracount + me->serialcount));
+	printf("Total lock operation number: %d\n", metadata->lockcount);
 #endif
 
 	metadata->numpagefault += me->numpagefault;
@@ -338,7 +339,7 @@ int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t * attr)
 }
 
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
-	printf("HBDet: Thread (%d) enter pthread_mutex_lock\n", me->tid);
+	//printf("HBDet: Thread (%d) enter pthread_mutex_lock\n", me->tid);
 	if(!initialized){
 		return 0;
 	}

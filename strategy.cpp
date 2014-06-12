@@ -197,7 +197,7 @@ int MProtectStrategy::writeMemory(void* addr, size_t len){
 	me->numpagefault ++;
 	unprotectMemory(addr, PAGE_SIZE);
 
-	std::cout << "writeMemory: addr = " << addr << std::endl;
+	//std::cout << "writeMemory: addr = " << addr << std::endl;
 	
 	address_t pageaddr = ((address_t)addr >> LOG_PAGE_SIZE) << LOG_PAGE_SIZE;
 	//printf("Thread %d handleWrite: pageid = %d, insync = %d\n", me->tid, pageid, me->insync);

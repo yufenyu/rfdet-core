@@ -60,6 +60,7 @@ typedef struct _thread_info_t {
 	/*TODO: string_buf could be moved to global (thread private) data structure!*/
 
 	_thread_info_t(){
+		
 		tid = INVALID_THREAD_ID;
 		wcond = NULL;
 		next = NULL;

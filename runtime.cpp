@@ -241,10 +241,10 @@ int HBRuntime::protectSharedData(){
 	uint64 starttime = Util::copy_time();
 #endif
 
-	printf("Protect globals\n");
+	DEBUG_MSG("Protect globals\n");
 	protect_globals();/*Protect the global variables.*/
 	//protect_heap();
-	printf("Protect heap\n");
+	DEBUG_MSG("Protect heap\n");
 	Heap::getHeap()->protect_heap();
 	//protectHeap();
 	
@@ -252,7 +252,7 @@ int HBRuntime::protectSharedData(){
 	uint64 endtime = Util::copy_time();
 	me->protecttime += (endtime - starttime);
 #endif
-	printf("Heap protected\n");
+	DEBUG_MSG("Heap protected\n");
 	return 0;
 }
 
@@ -456,6 +456,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 #ifdef _PROFILING
 	me->paracount += paracount;
 	me->serialcount += serialcount;
+	metadata->lockcount ++;
 #endif
 	DEBUG_MSG("Thread %d total restored = %d\n", me->tid, paracount + serialcount);
 
@@ -588,15 +589,15 @@ int HBRuntime::threadCreate (pthread_t * pid, const pthread_attr_t * attr, void 
 	//printf("--thread %d leave pthread_create\n", me->tid);
 
 	if(singlethread){//changing from single thread to multithreads.
-		printf("In protectSharedData()\n");
+		DEBUG_MSG("In protectSharedData()\n");
 		protectSharedData();
-		printf("Thread (%d): After protectSharedData()\n", me->tid);
+		DEBUG_MSG("Thread (%d): After protectSharedData()\n", me->tid);
 	}
 	else{
 		//TODO: takeSnapshot & flushLog
 		//beginSlice();
 	}
-	printf("Thread (%d): After protectSharedData() ................\n", me->tid);
+	DEBUG_MSG("Thread (%d): After protectSharedData() ................\n", me->tid);
 	NORMAL_MSG("Thread (%d) Create Thread (%d) OK!\n\n", me->tid, tid);
 	return 0;
 }
