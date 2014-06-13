@@ -345,7 +345,7 @@ private:
 public:
 	ImmutableMemory(){
 		void* mapped = mmap(NULL, TotalSize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-		ASSERT(mapped != NULL, "")
+		ASSERT(mapped != NULL, "mapped = %p\n", mapped)
 		_data = (char*)mapped;
 		_cursor = _data;
 		_limit = (char*)_data + TotalSize;

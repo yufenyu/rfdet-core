@@ -137,7 +137,7 @@ int Strategy::doPropagation(int from, vector_clock* old_time, vector_clock* new_
 MProtectStrategy* MProtectStrategy::instance = NULL;
 MProtectStrategy::MProtectStrategy(){
 	rwPageNum = 0;
-	ASSERT(instance == NULL, "")
+	ASSERT(instance == NULL, "instance = %p\n", instance)
 	instance = this;
 }
 
@@ -301,7 +301,7 @@ void MProtectStrategy::unprotectMemory(void* addr, size_t size){
 		VATAL_MSG("mprotect error: addr = %p, size = %zu\n" , addr, size);
 		_exit(1);
 	}
-	ASSERT(instance != NULL, "")
+	ASSERT(instance != NULL, "instance = %p\n", instance)
 	instance->rwPages[instance->rwPageNum] = addr;
 	instance->rwPageNum ++;
 	ASSERT(instance->rwPageNum < MAX_READ_WRITE_PAGE, "Too many pages to unprotect")

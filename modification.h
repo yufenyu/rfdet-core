@@ -101,19 +101,17 @@ protected:
 	void push_diff_slow(void* addr, int value);
 	int freeDataImpl(PageMemory* page);
 
-	/*Currently, this function is unused. */
+	/*
+	//Currently, this function is unused. 
 	void push_back(void* addr, size_t len){
 		//DEBUG_MSG("Thread push_back\n");
 		ASSERT(len >=0 && len <= 8, "")
-		//switch(len){
-		//case 1:
-		//}
 
 		for(int i = 0; i < len; i ++){
 			char* p = (char*)addr + i;
 			push_diff(p, *p);
 		}
-	}
+	}*/
 
 public:
 	virtual int record(AddressMap* ws);
