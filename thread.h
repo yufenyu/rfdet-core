@@ -19,6 +19,7 @@ typedef struct _thread_info_t {
 	struct _thread_info_t* next;
 	struct _thread_info_t* pre;
 	std::atomic<void*> wcond; /*The waited conditional variable.*/
+	
 	//unsigned long global_twin_start;
 	//unsigned long global_twin_end;
 	//unsigned long global_diff_log;

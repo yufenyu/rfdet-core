@@ -8,6 +8,8 @@
 #ifndef MEMORY_H_
 #define MEMORY_H_
 #include <sys/mman.h>
+#include <string.h>
+
 #include "defines.h"
 #include "utils.h"
 #include "common.h"
