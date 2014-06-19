@@ -57,7 +57,17 @@ public:
 	void pop_owner();
 	void dumpOnwers();
 	void setLocked(bool b);
-
+	
+	inline uint64_t getVersion(){
+		return version;
+	}
+	inline void incVersion(){
+		version ++;
+	}
+	inline void setVersion(uint64_t v){
+		version = v;
+	}
+	
 private:
 	/**
 	 * Field 'locked' indicates whether this lock is currently held by a thread. If 'locked' is equal to 0,
@@ -65,6 +75,7 @@ private:
 	 * 'locked' is used to support nested lock.
 	 * */
 	bool locked;
+	uint64_t version;
 public:
 	void* mutex; /*The corresponding user application mutex.*/
 	int ilock;  /*internal lock*/
