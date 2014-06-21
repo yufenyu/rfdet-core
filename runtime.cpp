@@ -101,7 +101,7 @@ int thread_entry_point(void* args){
 	sleep(20);
 #endif
 
-	RUNTIME::protectSharedData();
+	RUNTIME.protectSharedData();
 	DEBUG_MSG("Thread(%d) start: pid = %d\n", me->tid, me->pid);
 	void* res = thread->start_routine(thread->args);
 	DEBUG_MSG("Thread(%d) end function:\n", me->tid);
@@ -110,6 +110,55 @@ int thread_entry_point(void* args){
 	return 0;
 }
 
+void* shared_data_low;
+void initConstants(void* heap_low){
+	shared_data_low = (void*)GLOBALS_START;
+	DEBUG_MSG("GLOBALS_START = %x\n", (void*)GLOBALS_START);
+	if(shared_data_low > heap_low){
+		shared_data_low = heap_low;
+	}
+}
+
+RuntimeDataMemory::RuntimeDataMemory(int mode){
+	
+		thread_slot = THREAD_ID_START;
+		lock = 0;
+		barrierlock = 0;
+		barriercount = 0;
+		barrierfrontdoor = 0;
+		barrierbackdoor = 0;
+		slicelock = 0;
+		//free.index = 0;
+		//free.limit = META_DATA_SIZE - sizeof(struct RuntimeDataMemory);
+		internal_locks = &ilocks;
+		numpagefault = 0;
+		allocpages = 0;
+		memfootprint = 0;
+		allocated_size = 0;
+		gc_count = 0;
+		lockcount = 0;
+		runtimestatus.setRunningMode(mode);
+}
+
+void RuntimeDataMemory::initRuntime(){
+	STRATEGY::init();
+	Heap* heap = Heap::getHeap();
+	//void* heap = (void*)getHeap();
+	if(heap == NULL){
+		fprintf(stderr, "HBDet: initialize heap error!\n");
+		exit(0);
+	}
+	DEBUG_MSG("Heap Init OK...\n");
+	//Memory* m = MyBigHeapSource::getInstance();
+	//ASSERT(m != NULL, "")
+	//initConstants(m->getMemory());
+	initConstants(heap->start());
+	DEBUG_MSG("HBDet: before init_real_functions\n");
+	init_real_functions();
+	
+	DEBUG_MSG("HBDet: before init_mainthread\n");
+	init_mainthread();
+}
 
 InternalLock* InternalLockMap::createMutex(void* mutex){
 	void* ptr = metadata->meta_alloc(sizeof(InternalLock));
@@ -284,7 +333,7 @@ int HBRuntime::unprotectSharedData(){
 }
 
 bool IsSingleThread(){
-	return RUNTIME::isSingleThreaded();
+	return RUNTIME.isSingleThreaded();
 }
 
 bool HBRuntime::isSingleThreaded(){

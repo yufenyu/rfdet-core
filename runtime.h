@@ -19,7 +19,7 @@
 #include "slice.h"
 #include "structures.h"
 #include "thread.h"
-
+#include "defines.h"
 
 typedef struct _LockItem{
 	int tid;
@@ -78,25 +78,8 @@ public:
 	KernalSpace kernaldata;
 	MemModSpace modstore; /*Storage for memory modifications in the metadata space*/
 
-	RuntimeDataMemory(int mode){
-		thread_slot = THREAD_ID_START;
-		lock = 0;
-		barrierlock = 0;
-		barriercount = 0;
-		barrierfrontdoor = 0;
-		barrierbackdoor = 0;
-		slicelock = 0;
-		//free.index = 0;
-		//free.limit = META_DATA_SIZE - sizeof(struct RuntimeDataMemory);
-		internal_locks = & ilocks;
-		numpagefault = 0;
-		allocpages = 0;
-		memfootprint = 0;
-		allocated_size = 0;
-		gc_count = 0;
-		lockcount = 0;
-		runtimestatus.setRunningMode(mode);
-	}
+	RuntimeDataMemory(int mode);
+	void initRuntime();
 	/**
 	 * All fields should be added before free. TODO: alignment!
 	 */
@@ -169,21 +152,39 @@ enum HappenBeforeReason{
 	HB_REASON_JOIN,
 	HB_REASON_CREATE
 };
+class _Runtime {
+	
+public:
+	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg) = 0;
+	virtual int threadJoin(pthread_t tid, void ** val) = 0;
+	virtual int threadCancel(pthread_t tid) = 0;
+	virtual int mutexInit(void* mutex) = 0;
+	virtual int mutexLock(pthread_mutex_t * mutex) = 0;
+	virtual int mutexTrylock(pthread_mutex_t * mutex) = 0;
+	virtual int mutexUnlock(pthread_mutex_t * mutex) = 0;
+	//static int mutexTrylock(pthread_mutex_t * mutex);
+	virtual int condInit(void* cond) = 0;
+	virtual int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex) = 0;
+	virtual int condSignal(pthread_cond_t * cond) = 0;
+	virtual int condBroadcast(pthread_cond_t * cond) = 0;
+	virtual int barrierImpl(int tnum) = 0;
+	virtual int barrier_wait(pthread_barrier_t* barrier) = 0;
+};
 
-class HBRuntime{
+class HBRuntime {
 private:
-	static int internalLock(InternalLock* lock);
-	static int internalUnlock(InternalLock* lock);
-	static int rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall);
-	static int rawMutexUnlock(pthread_mutex_t * mutex, bool usercall);
+	int internalLock(InternalLock* lock);
+	int internalUnlock(InternalLock* lock);
+	int rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall);
+	int rawMutexUnlock(pthread_mutex_t * mutex, bool usercall);
 	//static int paraLockWait(InternalLock* lock, bool is_happen_before, vector_clock* old_time, int old_owner) __attribute__ ((deprecated));
-	static bool gcpoll();
+	bool gcpoll();
 
 public:
 
-	static bool isSingleThreaded();
-	static int GC();
-	static int tryGC(){
+	bool isSingleThreaded();
+	int GC();
+	int tryGC(){
 		//printf("tryGC\n");
 		if(gcpoll()){
 			GC();
@@ -192,16 +193,16 @@ public:
 		return 0;
 	}
 
-	static int clearGC(); //Full GC: clear all the diff logs without checking the validation.
+	int clearGC(); //Full GC: clear all the diff logs without checking the validation.
 
 public:
-	static int protectSharedData();
-	static int reprotectSharedData();
-	static int unprotectSharedData();
+	int protectSharedData();
+	int reprotectSharedData();
+	int unprotectSharedData();
 	//static void protectMemory(void* addr, size_t size, int prot);
 	//static void unprotectMemory(void* addr, size_t size);
-	static int protectOnDemand();
-	static bool isInGlobals(void* addr);
+	int protectOnDemand();
+	bool isInGlobals(void* addr);
 
 	//static int flushLogs();
 	//static int endSlice();
@@ -210,35 +211,35 @@ public:
 	/*Managing Logs*/
 	//static int takeSnapshot();
 	//static int restoreSnapshot(int from, vector_clock* old_time, vector_clock* curr_time, int reason);
-	static int publishLog(Slice* log);
+	int publishLog(Slice* log);
 	//static int fetchModify(int from, int to, vector_clock* old_time, vector_clock* curr_time);
-	static int prefetchModify(int from, int to, vector_clock* old_time, vector_clock* curr_time);
+	int prefetchModify(int from, int to, vector_clock* old_time, vector_clock* curr_time);
 	//static int mergeLog(Slice* flog);
 	//static int register_adhoc(void* cond);
 
-	static int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
-	static int threadJoin(pthread_t tid, void ** val);
-	static int threadCancel(pthread_t tid);
-	static int mutexInit(void* mutex);
-	static int mutexLock(pthread_mutex_t * mutex);
-	static int mutexTrylock(pthread_mutex_t * mutex);
-	static int mutexUnlock(pthread_mutex_t * mutex);
+	int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
+	int threadJoin(pthread_t tid, void ** val);
+	int threadCancel(pthread_t tid);
+	int mutexInit(void* mutex);
+	int mutexLock(pthread_mutex_t * mutex);
+	int mutexTrylock(pthread_mutex_t * mutex);
+	int mutexUnlock(pthread_mutex_t * mutex);
 	//static int mutexTrylock(pthread_mutex_t * mutex);
-	static int condInit(void* cond);
-	static int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
-	static int condSignal(pthread_cond_t * cond);
-	static int condBroadcast(pthread_cond_t * cond);
-	static int barrierImpl(int tnum);
-	static int barrier_wait(pthread_barrier_t* barrier);
+	int condInit(void* cond);
+	int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
+	int condSignal(pthread_cond_t * cond);
+	int condBroadcast(pthread_cond_t * cond);
+	int barrierImpl(int tnum);
+	int barrier_wait(pthread_barrier_t* barrier);
 
 
-	static bool isSharedMemory(void* addr);
-	static void dumpSharedRegion(void* pagestart, void* pageend, AddressPage** pages, Slice* stack);
-	static int dump(AddressMap* am, Slice* log);
+	bool isSharedMemory(void* addr);
+	void dumpSharedRegion(void* pagestart, void* pageend, AddressPage** pages, Slice* stack);
+	int dump(AddressMap* am, Slice* log);
 
-	static void beforeBarrier();
-	static void barrierDeliver();
-	static void afterBarrier();
+	void beforeBarrier();
+	void barrierDeliver();
+	void afterBarrier();
 	//static int doPropagation(int from, vector_clock* old_time, vector_clock* new_time);
 	//static int detLock(void * mutex);
 	//static int adhocsync_read(int* addr);
@@ -247,7 +248,7 @@ public:
 
 };
 
-
+extern HBRuntime RUNTIME;
 
 
 

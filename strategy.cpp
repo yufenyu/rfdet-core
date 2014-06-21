@@ -143,7 +143,7 @@ MProtectStrategy::MProtectStrategy(){
 
 int MProtectStrategy::endSlice(){
 	//RUNTIME::takeSnapshot();
-	if(RUNTIME::isSingleThreaded()){
+	if(RUNTIME.isSingleThreaded()){
 		return 0;
 	}
 #ifdef _PROFILING

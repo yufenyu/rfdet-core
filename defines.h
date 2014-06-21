@@ -60,11 +60,6 @@
 
 //#define SOLO_COPYONWRITE
 
-#ifndef SOLO_COPYONWRITE
-#define RUNTIME HBRuntime
-#else
-#define RUNTIME ShadowRuntime
-#endif
 
 //#define USING_KENDO
 //#define SNAPSHOT_LOG_CONFIG 1

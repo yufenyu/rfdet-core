@@ -15,13 +15,14 @@
 
 
 #include "hook.h"
-#include "runtime.h"
+
 #include "defines.h"
 #include "utils.h"
 #include "heaps.h"
 #include "signal.h"
 #include "common.h"
 #include "strategy.h"
+#include "runtime.h"
 
 #if defined(__GNUG__)
 void initialize() __attribute__((constructor));
@@ -38,14 +39,8 @@ bool kernal_malloc = false;
 static bool initialized = false;
 
 
-void* shared_data_low;
-void initConstants(void* heap_low){
-	shared_data_low = (void*)GLOBALS_START;
-	DEBUG_MSG("GLOBALS_START = %x\n", (void*)GLOBALS_START);
-	if(shared_data_low > heap_low){
-		shared_data_low = heap_low;
-	}
-}
+
+HBRuntime RUNTIME;
 
 /**
  * _init{malloc, pthread_mutex_lock, etc}| ----> initialize(init real hook functions)| ------> main()
@@ -68,59 +63,13 @@ void initialize() {
 	//printf("metadatasize = %d\n", metadatsize);
 	//kernal_malloc = true;
 	metadata = new (mapped) RuntimeDataMemory (Mode_DMT);
+	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
 	
+	metadata->initRuntime();
 	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
 	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
-	//VATAL_MSG("HBDet: initialize...\n");
-	//exit(0);
-
-	//interpose_pthread_routines();
-	init_globalprivate();
-	STRATEGY::init();
-	//init_globals();
-	//init_heap();
-	Heap* heap = Heap::getHeap();
-	//void* heap = (void*)getHeap();
-	if(heap == NULL){
-		fprintf(stderr, "HBDet: initialize heap error!\n");
-		exit(0);
-	}
-	DEBUG_MSG("Heap Init OK...\n");
-
-	//Memory* m = MyBigHeapSource::getInstance();
-	//ASSERT(m != NULL, "")
-	//initConstants(m->getMemory());
-	initConstants(heap->start());
-
-	DEBUG_MSG("HBDet: before init_real_functions\n");
-	init_real_functions();
-
-
-
-	//kernal_malloc = false;
-	//metadata->init(metadata, META_DATA_SIZE);
-	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
-	/*
-	mapped = (LogMemory*)mmap(NULL, LOG_HEAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-	if(mapped == (LogMemory*)-1)
-	{
-		printf("error in hbdet.cpp 75\n");
-		_exit(1);
-	}
-	
-	DEBUG("HBDet: log_data = %x\n", log_data);
-	log_data = new (mapped) LogMemory;
-	log_data->init(log_data, LOG_HEAP_SIZE);
-	*/
 
 	DEBUG_MSG("HBDet: before initSnapshotMemory\n");
-	//SnapshotMemory::initSnapshotMemory();
-	//RuntimeMemory::initRuntimeMemory();
-
-	DEBUG_MSG("HBDet: before init_mainthread\n");
-	init_mainthread();
-
-	//getHeap()->malloc(1);
 
 	Util::start_time();
 	//ASSERT(initialized == true, "initialized = %d\n", initialized);
@@ -162,11 +111,6 @@ void finalize() {
 	//dumpPageMapInfo();
 }
 
-
-void assert_fail(char * str){
-	printf("%s\n", str);
-	exit(0);
-}
 
 
 ////////////////////////////////////////Hooked Functions////////////////////////////////////////////////////
@@ -307,7 +251,7 @@ int pthread_create (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (v
 	DEBUG_MSG("HBDet pthread_create\n");
 	//exit(0);
 	ASSERT(initialized, "")
-	return RUNTIME::threadCreate(pid, attr, fn, arg);
+	return RUNTIME.threadCreate(pid, attr, fn, arg);
 }
 
 int pthread_attr_init(pthread_attr_t *attr){
@@ -326,7 +270,7 @@ int pthread_join(pthread_t tid, void ** val) {
 	ASSERT(initialized, "")
 	//*val = NULL;
 	//printf("HBDet: before calling threadJoin\n");
-	int ret = RUNTIME::threadJoin(tid, val);
+	int ret = RUNTIME.threadJoin(tid, val);
 	if(val != NULL){
 		*val = NULL;
 	}
@@ -335,7 +279,7 @@ int pthread_join(pthread_t tid, void ** val) {
 }
 
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t * attr) {
-	int ret = RUNTIME::mutexInit(mutex);
+	int ret = RUNTIME.mutexInit(mutex);
 	return ret;
 }
 
@@ -345,7 +289,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 		return 0;
 	}
 #ifdef USING_INTERNAL_LOCK
-	int ret = RUNTIME::mutexLock(mutex);
+	int ret = RUNTIME.mutexLock(mutex);
 	return ret;
 #else
 	return real_pthread_mutex_lock(mutex);
@@ -354,7 +298,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
 	//ASSERT(false, "pthread_mutex_trylock is not implemented!\n")
-	int ret = RUNTIME::mutexTrylock(mutex);
+	int ret = RUNTIME.mutexTrylock(mutex);
 	return ret;
 }
 
@@ -365,7 +309,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 	}
 	int ret = 0;
 #ifdef USING_INTERNAL_LOCK
-	ret = RUNTIME::mutexUnlock(mutex);
+	ret = RUNTIME.mutexUnlock(mutex);
 
 #else
 	ret = real_pthread_mutex_unlock(mutex);
@@ -387,7 +331,7 @@ pthread_t pthread_self(void) {
 
 int pthread_cond_init(pthread_cond_t * cond, const pthread_condattr_t *attr) {
 	ASSERT(initialized, "pthread_cond_init: runtime is not initialized!");
-	return RUNTIME::condInit(cond);
+	return RUNTIME.condInit(cond);
 	//return real_pthread_cond_init(cond, attr);
 }
 
@@ -395,7 +339,7 @@ int pthread_cond_broadcast(pthread_cond_t * cond) {
 	//return real_pthread_cond_broadcast(cond);
 	//ASSERT(initialized, "pthread_cond_broadcast: runtime is not initialized!")
 	if(initialized){
-		int ret = HBRuntime::condBroadcast(cond);
+		int ret = RUNTIME.condBroadcast(cond);
 		return ret;
 	}
 	return 0;
@@ -404,13 +348,13 @@ int pthread_cond_broadcast(pthread_cond_t * cond) {
 int pthread_cond_signal(pthread_cond_t * cond) {
 	ASSERT(initialized, "pthread_cond_signal: runtime is not initialized!")
 	//return real_pthread_cond_signal(cond);
-	int ret = RUNTIME::condSignal(cond);
+	int ret = RUNTIME.condSignal(cond);
 	return ret;
 }
 
 int pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex) {
 	ASSERT(initialized, "pthread_cond_wait: runtime is not initialized!")
-	int ret = RUNTIME::condWait(cond, mutex);
+	int ret = RUNTIME.condWait(cond, mutex);
 	return ret;
 	//return real_pthread_cond_wait(cond, mutex);
 }
@@ -440,7 +384,7 @@ int sigwait(const sigset_t *set, int *sig) {
 int pthread_cancel(pthread_t thread) {
 
 	ASSERT(initialized, "pthread_cond_destroy: runtime is not initialized!")
-	int ret = RUNTIME::threadCancel(thread);
+	int ret = RUNTIME.threadCancel(thread);
 	return ret;
 }
 
@@ -457,7 +401,7 @@ void pthread_exit(void * value_ptr) {
 int pthread_barrier_wait(pthread_barrier_t* barrier) {
 	ASSERT(initialized, "pthread_barrier_wait: runtime is not initialized!")
 
-	return RUNTIME::barrier_wait(barrier);
+	return RUNTIME.barrier_wait(barrier);
 }
 
 #endif
