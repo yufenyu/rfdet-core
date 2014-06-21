@@ -101,7 +101,7 @@ int thread_entry_point(void* args){
 	sleep(20);
 #endif
 
-	RUNTIME.protectSharedData();
+	RUNTIME->protectSharedData();
 	DEBUG_MSG("Thread(%d) start: pid = %d\n", me->tid, me->pid);
 	void* res = thread->start_routine(thread->args);
 	DEBUG_MSG("Thread(%d) end function:\n", me->tid);
@@ -119,7 +119,7 @@ void initConstants(void* heap_low){
 	}
 }
 
-RuntimeDataMemory::RuntimeDataMemory(int mode){
+RuntimeDataMemory::RuntimeDataMemory(){
 	
 		thread_slot = THREAD_ID_START;
 		lock = 0;
@@ -137,7 +137,7 @@ RuntimeDataMemory::RuntimeDataMemory(int mode){
 		allocated_size = 0;
 		gc_count = 0;
 		lockcount = 0;
-		runtimestatus.setRunningMode(mode);
+		runtimestatus.setRunningMode(Mode_DMT);
 }
 
 void RuntimeDataMemory::initRuntime(){
@@ -333,7 +333,7 @@ int HBRuntime::unprotectSharedData(){
 }
 
 bool IsSingleThread(){
-	return RUNTIME.isSingleThreaded();
+	return RUNTIME->isSingleThreaded();
 }
 
 bool HBRuntime::isSingleThreaded(){

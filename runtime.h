@@ -57,7 +57,7 @@ public:
 	volatile int barrierbackdoor;
 	int slicelock;
 	thread_info_t threads[MAX_THREAD_NUM];
-
+	
 
 	/*TODO: check where are these maps stored? meta data, or the anonymous shared heap? */
 	InternalLockMap ilocks;
@@ -78,7 +78,7 @@ public:
 	KernalSpace kernaldata;
 	MemModSpace modstore; /*Storage for memory modifications in the metadata space*/
 
-	RuntimeDataMemory(int mode);
+	RuntimeDataMemory();
 	void initRuntime();
 	/**
 	 * All fields should be added before free. TODO: alignment!
@@ -178,6 +178,7 @@ public:
 };
 
 class HBRuntime {
+	RuntimeDataMemory _metadata;
 private:
 	int internalLock(InternalLock* lock);
 	int internalUnlock(InternalLock* lock);
@@ -258,9 +259,13 @@ public:
 	virtual void * valloc(size_t sz);
 	virtual void * calloc(size_t nmemb, size_t sz);
 	virtual void * realloc(void * ptr, size_t sz);
+	
+	virtual RuntimeDataMemory* getMetadata(){
+		return &_metadata;
+	}
 };
 
-extern HBRuntime RUNTIME;
+extern HBRuntime* RUNTIME;
 
 
 

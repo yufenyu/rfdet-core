@@ -40,7 +40,7 @@ static bool initialized = false;
 
 
 
-HBRuntime RUNTIME;
+HBRuntime* RUNTIME;
 
 /**
  * _init{malloc, pthread_mutex_lock, etc}| ----> initialize(init real hook functions)| ------> main()
@@ -54,7 +54,7 @@ HBRuntime RUNTIME;
 void initialize() {
 	NORMAL_MSG("HBDet: initialize...\n");
 	/*Init meta data.*/
-	size_t metadatsize = sizeof(RuntimeDataMemory) + PAGE_SIZE;
+	size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
 	void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 	if(mapped == (void*)-1){
 		DEBUG("Error: cannot allocate memory for meta data!\n");
@@ -62,9 +62,10 @@ void initialize() {
 	}
 	//printf("metadatasize = %d\n", metadatsize);
 	//kernal_malloc = true;
-	metadata = new (mapped) RuntimeDataMemory (Mode_DMT);
+	RUNTIME = new (mapped) HBRuntime ();
 	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
 	
+	metadata = RUNTIME->getMetadata();
 	metadata->initRuntime();
 	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
 	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
@@ -148,7 +149,7 @@ void * malloc(size_t sz) {
 	else{
 		//WARNING_MSG("malloc, sz = %d\n", sz);
 		//ptr = Heap::getHeap()->malloc(sz);
-		ptr = RUNTIME.malloc(sz);
+		ptr = RUNTIME->malloc(sz);
 		//ptr = getHeap()->malloc(sz);
 		DEBUG_MSG("HBDet: malloc is implemented: ptr = %x\n", ptr);
 	}
@@ -162,7 +163,7 @@ void  free(void * addr)
 	if (!initialized) {
 		return;
 	}
-	RUNTIME.free(addr);
+	RUNTIME->free(addr);
 	//Heap::getHeap()->free(addr);
 	//getHeap()->free(addr);
 }
@@ -192,7 +193,7 @@ void * valloc(size_t sz) {
 		//sz += 2;
 		//sz = sz * 4096;
 		//ptr = Heap::getHeap()->malloc(sz);
-		ptr = RUNTIME.valloc(sz);
+		ptr = RUNTIME->valloc(sz);
 		//ptr = getHeap()->malloc(sz);
 		/*fixme: implement valloc using the next two lines.
 		  ptr = Heap::appHeap()->valloc(sz);
@@ -224,7 +225,7 @@ void * calloc(size_t nmemb, size_t sz) {
 	}
 	else{
 		//ptr = Heap::getHeap()->malloc(sz * nmemb);
-		ptr = RUNTIME.calloc(nmemb, sz);
+		ptr = RUNTIME->calloc(nmemb, sz);
 		//ptr = getHeap()->malloc(sz * nmemb);
 		DEBUG_MSG("HBDet: calloc is implemented: ptr = %x\n", ptr);
 	}
@@ -243,7 +244,7 @@ void * realloc(void * ptr, size_t sz) {
 	}
 	else{
 		//return Heap::getHeap()->realloc(ptr, sz);
-		return RUNTIME.realloc(ptr, sz);
+		return RUNTIME->realloc(ptr, sz);
 		//return getHeap()->realloc(ptr, sz);
 	}
 
@@ -256,7 +257,7 @@ int pthread_create (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (v
 	DEBUG_MSG("HBDet pthread_create\n");
 	//exit(0);
 	ASSERT(initialized, "")
-	return RUNTIME.threadCreate(pid, attr, fn, arg);
+	return RUNTIME->threadCreate(pid, attr, fn, arg);
 }
 
 int pthread_attr_init(pthread_attr_t *attr){
@@ -275,7 +276,7 @@ int pthread_join(pthread_t tid, void ** val) {
 	ASSERT(initialized, "")
 	//*val = NULL;
 	//printf("HBDet: before calling threadJoin\n");
-	int ret = RUNTIME.threadJoin(tid, val);
+	int ret = RUNTIME->threadJoin(tid, val);
 	if(val != NULL){
 		*val = NULL;
 	}
@@ -284,7 +285,7 @@ int pthread_join(pthread_t tid, void ** val) {
 }
 
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t * attr) {
-	int ret = RUNTIME.mutexInit(mutex);
+	int ret = RUNTIME->mutexInit(mutex);
 	return ret;
 }
 
@@ -294,7 +295,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 		return 0;
 	}
 #ifdef USING_INTERNAL_LOCK
-	int ret = RUNTIME.mutexLock(mutex);
+	int ret = RUNTIME->mutexLock(mutex);
 	return ret;
 #else
 	return real_pthread_mutex_lock(mutex);
@@ -303,7 +304,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
 	//ASSERT(false, "pthread_mutex_trylock is not implemented!\n")
-	int ret = RUNTIME.mutexTrylock(mutex);
+	int ret = RUNTIME->mutexTrylock(mutex);
 	return ret;
 }
 
@@ -314,7 +315,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 	}
 	int ret = 0;
 #ifdef USING_INTERNAL_LOCK
-	ret = RUNTIME.mutexUnlock(mutex);
+	ret = RUNTIME->mutexUnlock(mutex);
 
 #else
 	ret = real_pthread_mutex_unlock(mutex);
@@ -336,7 +337,7 @@ pthread_t pthread_self(void) {
 
 int pthread_cond_init(pthread_cond_t * cond, const pthread_condattr_t *attr) {
 	ASSERT(initialized, "pthread_cond_init: runtime is not initialized!");
-	return RUNTIME.condInit(cond);
+	return RUNTIME->condInit(cond);
 	//return real_pthread_cond_init(cond, attr);
 }
 
@@ -344,7 +345,7 @@ int pthread_cond_broadcast(pthread_cond_t * cond) {
 	//return real_pthread_cond_broadcast(cond);
 	//ASSERT(initialized, "pthread_cond_broadcast: runtime is not initialized!")
 	if(initialized){
-		int ret = RUNTIME.condBroadcast(cond);
+		int ret = RUNTIME->condBroadcast(cond);
 		return ret;
 	}
 	return 0;
@@ -353,13 +354,13 @@ int pthread_cond_broadcast(pthread_cond_t * cond) {
 int pthread_cond_signal(pthread_cond_t * cond) {
 	ASSERT(initialized, "pthread_cond_signal: runtime is not initialized!")
 	//return real_pthread_cond_signal(cond);
-	int ret = RUNTIME.condSignal(cond);
+	int ret = RUNTIME->condSignal(cond);
 	return ret;
 }
 
 int pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex) {
 	ASSERT(initialized, "pthread_cond_wait: runtime is not initialized!")
-	int ret = RUNTIME.condWait(cond, mutex);
+	int ret = RUNTIME->condWait(cond, mutex);
 	return ret;
 	//return real_pthread_cond_wait(cond, mutex);
 }
@@ -389,7 +390,7 @@ int sigwait(const sigset_t *set, int *sig) {
 int pthread_cancel(pthread_t thread) {
 
 	ASSERT(initialized, "pthread_cond_destroy: runtime is not initialized!")
-	int ret = RUNTIME.threadCancel(thread);
+	int ret = RUNTIME->threadCancel(thread);
 	return ret;
 }
 
@@ -406,7 +407,7 @@ void pthread_exit(void * value_ptr) {
 int pthread_barrier_wait(pthread_barrier_t* barrier) {
 	ASSERT(initialized, "pthread_barrier_wait: runtime is not initialized!")
 
-	return RUNTIME.barrier_wait(barrier);
+	return RUNTIME->barrier_wait(barrier);
 }
 
 #endif

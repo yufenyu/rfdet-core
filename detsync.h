@@ -29,7 +29,6 @@ struct ReplayLog{
 };
 
 /*An implementation of Record & replay policy*/
-
 class RRSyncPolicy : public SyncPolicy {
 	
 	std::string logfile;

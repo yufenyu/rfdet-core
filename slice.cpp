@@ -566,7 +566,7 @@ void SlicePointer::checkDuplicate(Slice* s, int from, vector_clock* old_time, ve
 int SlicePointer::addSlice(Slice* s){
 
 	if(pointend >= MAX_SLICE_POINTER_NUM){
-		RUNTIME.GC();
+		RUNTIME->GC();
 	}
 	ASSERT(pointend < MAX_SLICE_POINTER_NUM, "Run out of slice pointers.")
 	int ret = pointend;
