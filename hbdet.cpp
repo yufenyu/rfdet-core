@@ -147,7 +147,8 @@ void * malloc(size_t sz) {
 	}
 	else{
 		//WARNING_MSG("malloc, sz = %d\n", sz);
-		ptr = Heap::getHeap()->malloc(sz);
+		//ptr = Heap::getHeap()->malloc(sz);
+		ptr = RUNTIME.malloc(sz);
 		//ptr = getHeap()->malloc(sz);
 		DEBUG_MSG("HBDet: malloc is implemented: ptr = %x\n", ptr);
 	}
@@ -161,7 +162,8 @@ void  free(void * addr)
 	if (!initialized) {
 		return;
 	}
-	Heap::getHeap()->free(addr);
+	RUNTIME.free(addr);
+	//Heap::getHeap()->free(addr);
 	//getHeap()->free(addr);
 }
 
@@ -189,7 +191,8 @@ void * valloc(size_t sz) {
 		//sz = sz/4096;
 		//sz += 2;
 		//sz = sz * 4096;
-		ptr = Heap::getHeap()->malloc(sz);
+		//ptr = Heap::getHeap()->malloc(sz);
+		ptr = RUNTIME.valloc(sz);
 		//ptr = getHeap()->malloc(sz);
 		/*fixme: implement valloc using the next two lines.
 		  ptr = Heap::appHeap()->valloc(sz);
@@ -220,7 +223,8 @@ void * calloc(size_t nmemb, size_t sz) {
 		DEBUG_MSG("HBDet: kernal calloc: ptr = %x\n", ptr);
 	}
 	else{
-		ptr = Heap::getHeap()->malloc(sz * nmemb);
+		//ptr = Heap::getHeap()->malloc(sz * nmemb);
+		ptr = RUNTIME.calloc(nmemb, sz);
 		//ptr = getHeap()->malloc(sz * nmemb);
 		DEBUG_MSG("HBDet: calloc is implemented: ptr = %x\n", ptr);
 	}
@@ -238,7 +242,8 @@ void * realloc(void * ptr, size_t sz) {
 		free(ptr);
 	}
 	else{
-		return Heap::getHeap()->realloc(ptr, sz);
+		//return Heap::getHeap()->realloc(ptr, sz);
+		return RUNTIME.realloc(ptr, sz);
 		//return getHeap()->realloc(ptr, sz);
 	}
 

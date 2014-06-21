@@ -1202,6 +1202,24 @@ int HBRuntime::dump(AddressMap* am, Slice* log){
 }
 #endif
 
+
+void * HBRuntime::malloc(size_t sz){
+	return Heap::getHeap()->malloc(sz);
+}
+void  HBRuntime::free(void * addr){
+	Heap::getHeap()->free(addr);
+}
+void * HBRuntime::valloc(size_t sz){
+	return Heap::getHeap()->malloc(sz);
+}
+void * HBRuntime::calloc(size_t nmemb, size_t sz){
+	return Heap::getHeap()->malloc(nmemb * sz);
+}
+void * HBRuntime::realloc(void * ptr, size_t sz){
+	return Heap::getHeap()->realloc(ptr, sz);
+}
+
+
 uint64 Util::timekeeper = 0;
 uint64 Util::starttime = 0;
 

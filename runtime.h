@@ -155,6 +155,12 @@ enum HappenBeforeReason{
 class _Runtime {
 	
 public:
+	virtual void * malloc(size_t sz) = 0;
+	virtual void  free(void * addr) = 0;
+	virtual void * valloc(size_t sz) = 0;
+	virtual void * calloc(size_t nmemb, size_t sz) = 0;
+	virtual void * realloc(void * ptr, size_t sz) = 0;
+	
 	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg) = 0;
 	virtual int threadJoin(pthread_t tid, void ** val) = 0;
 	virtual int threadCancel(pthread_t tid) = 0;
@@ -246,6 +252,12 @@ public:
 	//static int adhocsync_write(int* addr, int value);
 	//static int adhocsync_rwait(int* cond, int value);
 
+	
+	virtual void * malloc(size_t sz);
+	virtual void  free(void * addr);
+	virtual void * valloc(size_t sz);
+	virtual void * calloc(size_t nmemb, size_t sz);
+	virtual void * realloc(void * ptr, size_t sz);
 };
 
 extern HBRuntime RUNTIME;
