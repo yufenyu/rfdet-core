@@ -177,8 +177,21 @@ public:
 	virtual int barrier_wait(pthread_barrier_t* barrier) = 0;
 };
 
+class ThreadPrivateData{
+	bool kernal_malloc;
+public:
+	ThreadPrivateData() : kernal_malloc(false){}
+	inline bool IsKernalMalloc(){
+		return kernal_malloc;
+	}
+	inline bool SetKernalMalloc(bool b){
+		kernal_malloc = b;
+	}
+};
+
 class HBRuntime {
 	RuntimeDataMemory _metadata;
+	ThreadPrivateData* tpdata;
 private:
 	int internalLock(InternalLock* lock);
 	int internalUnlock(InternalLock* lock);
@@ -188,7 +201,7 @@ private:
 	bool gcpoll();
 
 public:
-
+	HBRuntime();
 	bool isSingleThreaded();
 	int GC();
 	int tryGC(){

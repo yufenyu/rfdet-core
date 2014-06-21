@@ -282,6 +282,12 @@ int getThreadNum(){
 	return count;
 }
 
+ThreadPrivateData threadprivatedata;
+
+HBRuntime::HBRuntime(){
+	this->tpdata = &threadprivatedata;
+}
+
 int HBRuntime::protectSharedData(){
 	if(isSingleThreaded()){
 		return 0;
@@ -1204,17 +1210,28 @@ int HBRuntime::dump(AddressMap* am, Slice* log){
 
 
 void * HBRuntime::malloc(size_t sz){
+	if(tpdata->IsKernalMalloc()){
+		return _metadata.meta_alloc(sz);
+	}
+
 	return Heap::getHeap()->malloc(sz);
 }
+
 void  HBRuntime::free(void * addr){
 	Heap::getHeap()->free(addr);
 }
 void * HBRuntime::valloc(size_t sz){
+	ASSERT(!tpdata->IsKernalMalloc(), "Could not be kernal malloc")
 	return Heap::getHeap()->malloc(sz);
 }
 void * HBRuntime::calloc(size_t nmemb, size_t sz){
+	if(tpdata->IsKernalMalloc()){
+		void* ptr = _metadata.meta_alloc(sz * nmemb);
+		return ptr;
+	}
 	return Heap::getHeap()->malloc(nmemb * sz);
 }
+
 void * HBRuntime::realloc(void * ptr, size_t sz){
 	return Heap::getHeap()->realloc(ptr, sz);
 }

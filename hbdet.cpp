@@ -35,10 +35,8 @@ RuntimeDataMemory * metadata;
 InternalLockMap* internal_locks;
 /*TODO: assert me is not in the region of global variables.*/
 thread_info_t * me;
-bool kernal_malloc = false;
+//bool kernal_malloc = false;
 static bool initialized = false;
-
-
 
 HBRuntime* RUNTIME;
 
@@ -139,13 +137,12 @@ void * malloc(size_t sz) {
 			_exit(1);
 		}
 	}
-	else if(kernal_malloc){
-		//printf("point 0: malloc, sz = %d\n", sz);
-		//Util::spinlock(&metadata->ilocks.extlock);
-		ptr = metadata->meta_alloc(sz);
-		//Util::unlock(&metadata->ilocks.extlock);
-		DEBUG_MSG("HBDet: kernal malloc: ptr = %x\n", ptr);
-	}
+//	else if(kernal_malloc){
+
+//		ptr = metadata->meta_alloc(sz);
+
+//		DEBUG_MSG("HBDet: kernal malloc: ptr = %x\n", ptr);
+//	}
 	else{
 		//WARNING_MSG("malloc, sz = %d\n", sz);
 		//ptr = Heap::getHeap()->malloc(sz);
@@ -183,11 +180,6 @@ void * valloc(size_t sz) {
 			_exit(1);
 		}
 	}
-	else if(kernal_malloc){
-		//ptr = metadata->meta_alloc(sz);
-		printf("HBDet: error !!!!!!!!!kernal valloc: ptr = %p\n", ptr);
-		exit(1);
-	}
 	else{
 		//sz = sz/4096;
 		//sz += 2;
@@ -218,10 +210,6 @@ void * calloc(size_t nmemb, size_t sz) {
 			printf("error in hbdet.cpp 127\n");
 			_exit(1);
 		}
-	}
-	else if(kernal_malloc){
-		ptr = metadata->meta_alloc(sz * nmemb);
-		DEBUG_MSG("HBDet: kernal calloc: ptr = %x\n", ptr);
 	}
 	else{
 		//ptr = Heap::getHeap()->malloc(sz * nmemb);
