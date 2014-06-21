@@ -163,19 +163,45 @@ public:
 	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg) = 0;
 	virtual int threadJoin(pthread_t tid, void ** val) = 0;
 	virtual int threadCancel(pthread_t tid) = 0;
-	virtual int mutexInit(void* mutex) = 0;
+	virtual int mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr) = 0;
 	virtual int mutexLock(pthread_mutex_t * mutex) = 0;
 	virtual int mutexTrylock(pthread_mutex_t * mutex) = 0;
 	virtual int mutexUnlock(pthread_mutex_t * mutex) = 0;
 	//static int mutexTrylock(pthread_mutex_t * mutex);
-	virtual int condInit(void* cond) = 0;
+	virtual int condInit(pthread_cond_t* cond, const pthread_condattr_t *attr) = 0;
 	virtual int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex) = 0;
 	virtual int condSignal(pthread_cond_t * cond) = 0;
 	virtual int condBroadcast(pthread_cond_t * cond) = 0;
-	virtual int barrierImpl(int tnum) = 0;
 	virtual int barrier_wait(pthread_barrier_t* barrier) = 0;
 	
 	virtual void init() = 0;
+};
+
+class PthreadRuntime : public _Runtime {
+	
+	virtual void init();
+	
+	virtual void * malloc(size_t sz);
+	virtual void  free(void * addr);
+	virtual void * valloc(size_t sz);
+	virtual void * calloc(size_t nmemb, size_t sz);
+	virtual void * realloc(void * ptr, size_t sz);
+	
+	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
+	virtual int threadJoin(pthread_t tid, void ** val);
+	virtual int threadCancel(pthread_t tid);
+	virtual int mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr);
+	virtual int mutexLock(pthread_mutex_t * mutex);
+	virtual int mutexTrylock(pthread_mutex_t * mutex);
+	virtual int mutexUnlock(pthread_mutex_t * mutex);
+	//static int mutexTrylock(pthread_mutex_t * mutex);
+	virtual int condInit(pthread_cond_t* cond, const pthread_condattr_t * attr);
+	virtual int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
+	virtual int condSignal(pthread_cond_t * cond);
+	virtual int condBroadcast(pthread_cond_t * cond);
+	//virtual int barrierImpl(int tnum);
+	virtual int barrier_wait(pthread_barrier_t* barrier);
+	
 };
 
 class ThreadPrivateData{
@@ -238,21 +264,22 @@ public:
 	//static int mergeLog(Slice* flog);
 	//static int register_adhoc(void* cond);
 
-	int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
-	int threadJoin(pthread_t tid, void ** val);
-	int threadCancel(pthread_t tid);
-	int mutexInit(void* mutex);
-	int mutexLock(pthread_mutex_t * mutex);
-	int mutexTrylock(pthread_mutex_t * mutex);
-	int mutexUnlock(pthread_mutex_t * mutex);
+	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
+	virtual int threadJoin(pthread_t tid, void ** val);
+	virtual int threadCancel(pthread_t tid);
+	virtual int mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr);
+	virtual int mutexLock(pthread_mutex_t * mutex);
+	virtual int mutexTrylock(pthread_mutex_t * mutex);
+	virtual int mutexUnlock(pthread_mutex_t * mutex);
 	//static int mutexTrylock(pthread_mutex_t * mutex);
-	int condInit(void* cond);
-	int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
-	int condSignal(pthread_cond_t * cond);
-	int condBroadcast(pthread_cond_t * cond);
-	int barrierImpl(int tnum);
-	int barrier_wait(pthread_barrier_t* barrier);
+	virtual int condInit(pthread_cond_t* cond, const pthread_condattr_t * attr);
+	virtual int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
+	virtual int condSignal(pthread_cond_t * cond);
+	virtual int condBroadcast(pthread_cond_t * cond);
+	
+	virtual int barrier_wait(pthread_barrier_t* barrier);
 
+	int barrierImpl(int tnum);
 
 	bool isSharedMemory(void* addr);
 	void dumpSharedRegion(void* pagestart, void* pageend, AddressPage** pages, Slice* stack);

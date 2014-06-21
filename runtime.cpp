@@ -710,8 +710,8 @@ int HBRuntime::threadCancel(pthread_t tid){
 	return 0;
 }
 
-int HBRuntime::mutexInit(void* mutex){
-	DEBUG_MSG("Init mutex: %x\n", mutex);
+int HBRuntime::mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr){
+	DEBUG_MSG("Init mutex: %p\n", mutex);
 	metadata->ilocks.createMutex(mutex);
 	return 0;
 }
@@ -867,8 +867,8 @@ int HBRuntime::mutexUnlock(pthread_mutex_t * mutex){
 	return ret;
 }
 
-int HBRuntime::condInit(void* cond){
-	DEBUG_MSG("Init cond: %x\n", cond);
+int HBRuntime::condInit(pthread_cond_t* cond, const pthread_condattr_t *attr){
+	DEBUG_MSG("Init cond: %p\n", cond);
 	metadata->iconds.createCond(cond);
 	return 0;
 }
@@ -1259,4 +1259,67 @@ bool RuntimeStatus::IsSingleThread(){
 	ASSERT(false, "Not implemented.")
 	return false;
 }
+
+
+	
+void PthreadRuntime::init(){
+	init_real_functions();
+}
+	
+void * PthreadRuntime::malloc(size_t sz){
+	return real_malloc(sz);
+}
+void  PthreadRuntime::free(void * ptr){
+	real_free(ptr);
+}
+void * PthreadRuntime::valloc(size_t sz){
+	return real_valloc(sz);
+}
+void * PthreadRuntime::calloc(size_t nmemb, size_t sz){
+	return real_malloc(nmemb * sz);
+}
+void * PthreadRuntime::realloc(void * ptr, size_t sz){
+	return real_realloc(ptr, sz);
+}
+	
+int PthreadRuntime::threadCreate (pthread_t * pid, const pthread_attr_t * attr, 
+		void *(*fn) (void *), void * arg){
+	return real_pthread_create(pid, attr, fn, arg);
+}
+int PthreadRuntime::threadJoin(pthread_t tid, void ** val){
+	return real_pthread_join(tid, val);
+}
+int PthreadRuntime::threadCancel(pthread_t tid){
+	return real_pthread_cancel(tid);
+}
+int PthreadRuntime::mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr){
+	return real_pthread_mutex_init(mutex, attr);
+}
+int PthreadRuntime::mutexLock(pthread_mutex_t * mutex){
+	return real_pthread_mutex_lock(mutex);
+}
+int PthreadRuntime::mutexTrylock(pthread_mutex_t * mutex){
+	return real_pthread_mutex_trylock(mutex);
+}
+
+int PthreadRuntime::mutexUnlock(pthread_mutex_t * mutex){
+	return real_pthread_mutex_unlock(mutex);
+}
+	//static int mutexTrylock(pthread_mutex_t * mutex);
+int PthreadRuntime::condInit(pthread_cond_t* cond, const pthread_condattr_t *attr){
+	return real_pthread_cond_init(cond, attr);
+}
+int PthreadRuntime::condWait(pthread_cond_t * cond, pthread_mutex_t * mutex){
+	return real_pthread_cond_wait(cond, mutex);
+}
+int PthreadRuntime::condSignal(pthread_cond_t * cond){
+	return real_pthread_cond_signal(cond);
+}
+int PthreadRuntime::condBroadcast(pthread_cond_t * cond){
+	return real_pthread_cond_broadcast(cond);
+}
+int PthreadRuntime::barrier_wait(pthread_barrier_t* barrier){
+	return real_pthread_barrier_wait(barrier);
+}
+
 

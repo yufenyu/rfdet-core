@@ -60,7 +60,7 @@ extern int (*real_pthread_mutex_destroy)(pthread_mutex_t*);
 
 // pthread condition variables
 extern int (*real_pthread_condattr_init)(pthread_condattr_t*);
-extern int (*real_pthread_cond_init)(pthread_cond_t*, pthread_condattr_t*);
+extern int (*real_pthread_cond_init)(pthread_cond_t*, const pthread_condattr_t*);
 extern int (*real_pthread_cond_wait)(pthread_cond_t*, pthread_mutex_t*);
 extern int (*real_pthread_cond_signal)(pthread_cond_t*);
 extern int (*real_pthread_cond_broadcast)(pthread_cond_t*);

@@ -273,7 +273,7 @@ int pthread_join(pthread_t tid, void ** val) {
 }
 
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t * attr) {
-	int ret = RUNTIME->mutexInit(mutex);
+	int ret = RUNTIME->mutexInit(mutex, attr);
 	return ret;
 }
 
@@ -325,7 +325,7 @@ pthread_t pthread_self(void) {
 
 int pthread_cond_init(pthread_cond_t * cond, const pthread_condattr_t *attr) {
 	ASSERT(initialized, "pthread_cond_init: runtime is not initialized!");
-	return RUNTIME->condInit(cond);
+	return RUNTIME->condInit(cond, attr);
 	//return real_pthread_cond_init(cond, attr);
 }
 
