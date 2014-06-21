@@ -140,32 +140,16 @@ RuntimeDataMemory::RuntimeDataMemory(){
 		runtimestatus.setRunningMode(Mode_DMT);
 }
 
-void RuntimeDataMemory::initRuntime(){
-	STRATEGY::init();
-	Heap* heap = Heap::getHeap();
-	//void* heap = (void*)getHeap();
-	if(heap == NULL){
-		fprintf(stderr, "HBDet: initialize heap error!\n");
-		exit(0);
-	}
-	DEBUG_MSG("Heap Init OK...\n");
-	//Memory* m = MyBigHeapSource::getInstance();
-	//ASSERT(m != NULL, "")
-	//initConstants(m->getMemory());
-	initConstants(heap->start());
-	DEBUG_MSG("HBDet: before init_real_functions\n");
-	init_real_functions();
-	
-	DEBUG_MSG("HBDet: before init_mainthread\n");
-	init_mainthread();
-}
+
 
 InternalLock* InternalLockMap::createMutex(void* mutex){
 	void* ptr = metadata->meta_alloc(sizeof(InternalLock));
 	InternalLock* m = new (ptr) InternalLock(mutex);
-	kernal_malloc = true;
+	//kernal_malloc = true;
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
 	lockMap[mutex] = m;
-	kernal_malloc = false;
+	//kernal_malloc = false;
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
 	return m;
 }
 
@@ -181,7 +165,8 @@ InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
 	ASSERT(mutex != NULL, "")
 	//printf("FindOrCreateLock: enter critical section\n");
 	map <void*, InternalLock*> :: const_iterator iter;
-	kernal_malloc = true;
+	//kernal_malloc = true;
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
 	//SPINLOCK_LOCK(&lock);
 	InternalLock* m = lockMap[mutex];
 	//InternalLock* m = lockMap.at(mutex);
@@ -202,7 +187,8 @@ InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
 		}
 		SPINLOCK_UNLOCK(&lock);
 	}
-	kernal_malloc = false;
+	//kernal_malloc = false;
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
 	//SPINLOCK_UNLOCK(&lock);
 	return m;
 }
@@ -210,16 +196,18 @@ InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
 InternalCond* InternalCondsMap::createCond(void* cond){
 	void* ptr = metadata->meta_alloc(sizeof(InternalLock));
 	InternalCond* c = new (ptr) InternalCond(cond);
-	kernal_malloc = true;
+
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
 	condsMap[cond] = c;
-	kernal_malloc = false;
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
 	return c;
 }
 
 InternalCond* InternalCondsMap::findOrCreateCond(void* cond){
 	ASSERT(cond != NULL, "")
 	//SPINLOCK_LOCK(&lock);
-	kernal_malloc = true;
+	
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
 	InternalCond* c = condsMap[cond];
 	if(c == NULL) {
 		WARNING_MSG("Using conditional variable(%x) without initialize it\n", cond);
@@ -234,13 +222,15 @@ InternalCond* InternalCondsMap::findOrCreateCond(void* cond){
 		SPINLOCK_UNLOCK(&lock);
 	}
 	//SPINLOCK_UNLOCK(&lock);
-	kernal_malloc = false;
+	
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
 	return c;
 }
 
 AdhocSync* AdhocSyncMap::findOrCreateAdhoc(void* sync){
 	SPINLOCK_LOCK(&lock);
-	kernal_malloc = true;
+
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
 	AdhocSync* isync = adhocMap[sync];
 	if(isync == NULL) {
 		void* ptr = metadata->meta_alloc(sizeof(AdhocSync));
@@ -248,7 +238,8 @@ AdhocSync* AdhocSyncMap::findOrCreateAdhoc(void* sync){
 		adhocMap[sync] = isync;
 	}
 	SPINLOCK_UNLOCK(&lock);
-	kernal_malloc = false;
+
+	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
 	return isync;
 }
 
@@ -1236,6 +1227,25 @@ void * HBRuntime::realloc(void * ptr, size_t sz){
 	return Heap::getHeap()->realloc(ptr, sz);
 }
 
+void HBRuntime::init(){
+	STRATEGY::init();
+	Heap* heap = Heap::getHeap();
+	//void* heap = (void*)getHeap();
+	if(heap == NULL){
+		fprintf(stderr, "HBDet: initialize heap error!\n");
+		exit(0);
+	}
+	DEBUG_MSG("Heap Init OK...\n");
+	//Memory* m = MyBigHeapSource::getInstance();
+	//ASSERT(m != NULL, "")
+	//initConstants(m->getMemory());
+	initConstants(heap->start());
+	DEBUG_MSG("HBDet: before init_real_functions\n");
+	init_real_functions();
+	
+	DEBUG_MSG("HBDet: before init_mainthread\n");
+	init_mainthread();
+}
 
 uint64 Util::timekeeper = 0;
 uint64 Util::starttime = 0;

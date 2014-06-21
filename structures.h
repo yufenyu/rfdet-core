@@ -97,7 +97,7 @@ public:
 	//thread_info_t* readcursor;
 };
 
-extern bool kernal_malloc;
+
 class InternalLockMap{
 	map<void*, InternalLock*> lockMap;
 	int lock; /*shared*/

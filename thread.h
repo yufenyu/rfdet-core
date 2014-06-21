@@ -32,7 +32,7 @@ typedef struct _thread_info_t {
 	struct _thread_info_t* nextactive;/*Point to the next active thread*/
 	struct _thread_info_t* nextlockwaiter; /*Point to the next thread which waits for the same lock.*/
 
-	bool kernal_malloc; /*indicate whether this thread should malloc from meta data space.*/
+	//bool kernal_malloc; /*indicate whether this thread should malloc from meta data space.*/
 	uint32_t incs; /* Increase by 1 when entering a critical section, decrease by 1 when leaving a critical section. */
 	bool insync; /* If thread is performing synchronization in the runtime */
 	bool ingc; /*thread is performing GC.*/
@@ -69,7 +69,7 @@ typedef struct _thread_info_t {
 		//twin_list = global_twin_list;
 		incs = 0;
 		nextactive = this;
-		kernal_malloc = false;
+		//kernal_malloc = false;
 		finished = false;
 		ingc = false;
 		gc_count = 0;

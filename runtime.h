@@ -79,7 +79,6 @@ public:
 	MemModSpace modstore; /*Storage for memory modifications in the metadata space*/
 
 	RuntimeDataMemory();
-	void initRuntime();
 	/**
 	 * All fields should be added before free. TODO: alignment!
 	 */
@@ -175,6 +174,8 @@ public:
 	virtual int condBroadcast(pthread_cond_t * cond) = 0;
 	virtual int barrierImpl(int tnum) = 0;
 	virtual int barrier_wait(pthread_barrier_t* barrier) = 0;
+	
+	virtual void init() = 0;
 };
 
 class ThreadPrivateData{
@@ -273,9 +274,16 @@ public:
 	virtual void * calloc(size_t nmemb, size_t sz);
 	virtual void * realloc(void * ptr, size_t sz);
 	
-	virtual RuntimeDataMemory* getMetadata(){
+	RuntimeDataMemory* getMetadata(){
 		return &_metadata;
 	}
+	
+	ThreadPrivateData* getThreadPrivate(){
+		return tpdata;
+	}
+	
+	virtual void init();
+	
 };
 
 extern HBRuntime* RUNTIME;

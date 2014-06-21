@@ -64,7 +64,7 @@ void initialize() {
 	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
 	
 	metadata = RUNTIME->getMetadata();
-	metadata->initRuntime();
+	RUNTIME->init();
 	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
 	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
 
