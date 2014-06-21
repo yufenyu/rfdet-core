@@ -42,6 +42,7 @@ typedef struct _meta_free_space {
 
 class MemModSpace : public PageSizeMemory<METADATA_MMP_SPACE_SIZE, META_CHUNK_SIZE, MAX_THREAD_NUM> {};
 class KernalSpace : public ImmutableMemory<META_KERNAL_SPACE_SIZE> {};
+
 /**
  * This object is singleton, and global shared!
  */
@@ -72,11 +73,12 @@ public:
 	uint32_t gc_count;
 	uint32_t lockcount;
 	
+	RuntimeStatus runtimestatus;
 	/**/
 	KernalSpace kernaldata;
 	MemModSpace modstore; /*Storage for memory modifications in the metadata space*/
 
-	RuntimeDataMemory(){
+	RuntimeDataMemory(int mode){
 		thread_slot = THREAD_ID_START;
 		lock = 0;
 		barrierlock = 0;
@@ -93,6 +95,7 @@ public:
 		allocated_size = 0;
 		gc_count = 0;
 		lockcount = 0;
+		runtimestatus.setRunningMode(mode);
 	}
 	/**
 	 * All fields should be added before free. TODO: alignment!
@@ -146,6 +149,10 @@ public:
 
 	virtual size_t used(){
 		return modstore.used() + kernaldata.used();
+	}
+	
+	inline RuntimeStatus& getRuntimeStatus(){
+		return runtimestatus;
 	}
 };
 

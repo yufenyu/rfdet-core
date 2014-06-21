@@ -5,6 +5,9 @@
  *      Author: zhouxu
  */
 
+#include <string>
+#include <sstream>
+
 #include "detsync.h"
 //#include "kendo.h"
 #include "structures.h"
@@ -13,7 +16,6 @@
 
 DetSync::DetSync() {
 	// TODO Auto-generated constructor stub
-
 }
 
 DetSync::~DetSync() {
@@ -56,10 +58,11 @@ int DetSync::detUnlock(void* mutex){
 
 
 int RRSyncPolicy::lock(InternalLock* l){
-	if(runtime.runningmode == Mode_Record){
+	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	if(rt.IsRecording()){
 		return recordLock(l);
 	}
-	else if(runtime.runningmode == Mode_Replay){
+	else if(rt.IsReplaying()){
 		return replayLock(l);
 	}
 	ASSERT(false, "Never research here.")
@@ -67,10 +70,11 @@ int RRSyncPolicy::lock(InternalLock* l){
 }
 
 int RRSyncPolicy::trylock(InternalLock* l){
-	if(runtime.runningmode == Mode_Record){
+	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	if(rt.IsRecording()){
 		return recordTrylock(l);
 	}
-	else if(runtime.runningmode == Mode_Replay){
+	else if(rt.IsReplaying()){
 		return replayTrylock(l);
 	}
 	ASSERT(false, "Never research here.")
@@ -78,10 +82,11 @@ int RRSyncPolicy::trylock(InternalLock* l){
 }
 
 int RRSyncPolicy::unlock(InternalLock* l){
-	if(runtime.runningmode == Mode_Record){
+	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	if(rt.IsRecording()){
 		return recordUnlock(l);
 	}
-	else if(runtime.runningmode == Mode_Replay){
+	else if(rt.IsReplaying()){
 		return replayUnlock(l);
 	}
 	ASSERT(false, "Never research here.")
@@ -93,15 +98,17 @@ int RRSyncPolicy::unlock(InternalLock* l){
 int RRSyncPolicy::recordLock(InternalLock* l){
 	
 	Util::spinlock(&l->ilock);
-	thread->lockcount ++;
-	writeLog(tid, thread->lockount, l->getVersion(), 0);
+	lockcount[me->tid] ++;
+	writeLog(me->tid, lockcount[me->tid], l->getVersion(), 0);
 	l->incVersion();
 	return 0;
 }
 
 int RRSyncPolicy::replayLock(InternalLock* l){
-	thread->lockcount ++;
-	waitLock(tid, thread->lockcount, l);
+	lockcount[me->tid] ++;
+	ReplayLog log = readLog(me->tid, lockcount[me->tid]);
+	waitStatus(log, l);
+	//waitLock(me->tid, lockcount[me->tid], l);
 	
 	Util::spinlock(&l->ilock);
 	l->incVersion();
@@ -125,6 +132,7 @@ int RRSyncPolicy::recordTrylock(InternalLock* l){
 	return EBUSY;
 }
 
+
 int RRSyncPolicy::replayTrylock(InternalLock* l){
 	//int ret = Util::spintrylock(&l->ilock);
 	//if(thread->failednum < failednum){
@@ -145,27 +153,61 @@ int RRSyncPolicy::replayTrylock(InternalLock* l){
 	return EBUSY;
 }
 
+
 int RRSyncPolicy::recordUnlock(InternalLock* l){
 	Util::unlock(&l->ilock);
 }
+
 
 int RRSyncPolicy::replayUnlock(InternalLock* l){
 	Util::unlock(&l->ilock);
 }
 
 
-void RRSyncPolicy::writeLog(int tid, uint64_t locknum, uint64_t version, uint32_t failednum = 0){
-	
+
+void RRSyncPolicy::writeLog(int tid, uint64_t locknum, uint64_t version, uint32_t failednum){
+	FILE* file = this->getLogFile(tid);
+	ReplayLog log;
+	log.tid = tid;
+	log.locknum = locknum;
+	log.version = version;
+	log.failednum = failednum;
+	size_t ret = fwrite(&log, sizeof(log), 1, file);
+	ASSERT(ret == sizeof(log), "Write log failed.")
 }
 
-ReplayLog& RRSyncPolicy::readLog(int tid, uint64_t locknum){
-	
+
+ReplayLog RRSyncPolicy::readLog(int tid, uint64_t locknum){
+	FILE* file = this->getLogFile(tid);
+	ReplayLog log;
+	size_t ret = fread(&log, sizeof(log), 1, file);
+	ASSERT(ret == sizeof(log), "Read log failed.");
+	return log;
 }
 
-void RRSyncPolicy::waitStatus(ReplayLog& log){
-	
+
+void RRSyncPolicy::waitStatus(ReplayLog& log, InternalLock* lock){
+	ASSERT(lock->getVersion() <= log.version, "lock version increase too quickly")
+	while(lock->getVersion() < log.version){
+		Util::wait_for_a_while();
+	}
 }
+
 
 void RRSyncPolicy::moveToNextLog(){
 	
+}
+
+
+FILE* RRSyncPolicy::getLogFile(int tid){
+	std::stringstream ss;
+	ss << logfile << tid;
+	std::string logfilename = ss.str();
+	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	const char* mode = rt.IsRecording() ? "w" : "r";
+	if(fds[tid] == NULL){
+		fds[tid] = fopen(logfilename.c_str(), mode);
+		ASSERT(fds[tid] != NULL, "open file failed!");
+	}
+	return fds[tid];
 }

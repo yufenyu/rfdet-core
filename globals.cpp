@@ -78,6 +78,7 @@ bool is_in_globals(void* addr){
 }
 
 
+/*
 struct global_private_meta_data * pma;
 
 int init_globalprivate()
@@ -96,6 +97,7 @@ int init_globalprivate()
 	return 0;
 }
 
+
 void * alloc_global_private(int size)
 {
 	//printf("before alloc:  %x----%x\n",pma->start,pma->last);
@@ -111,3 +113,4 @@ void * alloc_global_private(int size)
 	//printf("after alloc:  %x----%x\n",pma->start,pma->last);
 	return ret;
 }
+*/

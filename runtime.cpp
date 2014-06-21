@@ -1155,3 +1155,14 @@ int HBRuntime::dump(AddressMap* am, Slice* log){
 
 uint64 Util::timekeeper = 0;
 uint64 Util::starttime = 0;
+
+
+int RuntimeStatus::CurrThreadID(){
+	ASSERT(false, "Not implemented.")
+	return 0;
+}
+bool RuntimeStatus::IsSingleThread(){
+	ASSERT(false, "Not implemented.")
+	return false;
+}
+

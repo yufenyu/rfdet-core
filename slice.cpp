@@ -134,7 +134,8 @@ void SliceManager::disposeDeads(){
 	while(s != NULL){
 		next = s->next;
 		if(s->getRefCount() == 0){
-			ASSERT(s->getOwner() == me->tid, "")
+			ASSERT(s->getOwner() == me->tid, "Thread (%d) disposed a dead slice(%d)", 
+					me->tid, s->getOwner())
 			this->freeSlice(s);
 		}
 		else{

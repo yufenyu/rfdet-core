@@ -54,9 +54,40 @@ struct global_private_meta_data{
 	void * last;
 };
 
+enum RuningMode{
+	Mode_DMT,
+	Mode_Record,
+	Mode_Replay,
+	Mode_RaceFree,
+	Mode_Pthreads
+};
+
+class RuntimeStatus{
+private:
+	int runningmode;
+public:
+	RuntimeStatus(){
+		runningmode = Mode_DMT;
+	}
+	inline void setRunningMode(int mode){
+		runningmode = mode;
+	}
+	int CurrThreadID();
+	bool IsSingleThread();
+	bool IsRecording(){
+		return runningmode == Mode_Record;
+	}
+	bool IsReplaying(){
+		return runningmode == Mode_Replay;
+	}
+	bool IsDMT(){
+		return runningmode == Mode_DMT;
+	}
+};
 
 int CurrThreadID();
 bool IsSingleThread();
+
 
 class ThreadObject{
 public:
@@ -65,6 +96,8 @@ public:
 		return 0;
 	}
 };
+
+
 
 
 typedef int32_t thread_id_t;

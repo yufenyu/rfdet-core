@@ -58,7 +58,17 @@ void initConstants(void* heap_low){
  */
 void initialize() {
 	NORMAL_MSG("HBDet: initialize...\n");
-
+	/*Init meta data.*/
+	size_t metadatsize = sizeof(RuntimeDataMemory) + PAGE_SIZE;
+	void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	if(mapped == (void*)-1){
+		DEBUG("Error: cannot allocate memory for meta data!\n");
+		_exit(1);
+	}
+	//printf("metadatasize = %d\n", metadatsize);
+	//kernal_malloc = true;
+	metadata = new (mapped) RuntimeDataMemory (Mode_DMT);
+	
 	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
 	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
 	//VATAL_MSG("HBDet: initialize...\n");
@@ -86,16 +96,7 @@ void initialize() {
 	init_real_functions();
 
 
-	/*Init meta data.*/
-	size_t metadatsize = sizeof(RuntimeDataMemory) + PAGE_SIZE;
-	void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-	if(mapped == (void*)-1){
-		DEBUG("Error: cannot allocate memory for meta data!\n");
-		_exit(1);
-	}
-	//printf("metadatasize = %d\n", metadatsize);
-	//kernal_malloc = true;
-	metadata = new (mapped) RuntimeDataMemory;
+
 	//kernal_malloc = false;
 	//metadata->init(metadata, META_DATA_SIZE);
 	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
