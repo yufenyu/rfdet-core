@@ -6,13 +6,18 @@
  *
  */
 
+
+#include <errno.h>
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <signal.h>
 #include <new>
-
+#include <string>
+#include <sstream>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "hook.h"
 
@@ -32,6 +37,10 @@ void finalize() __attribute__((destructor));
 #endif
 
 
+extern char *program_invocation_name;
+extern char *program_invocation_short_name;
+
+
 ////////////////////////////Global Variables/////////////////////////////
 
 //InternalLockMap* internal_locks;
@@ -42,6 +51,26 @@ _Runtime* RUNTIME;
 static _Runtime* GetRuntime(){
 	
 	char* rtconfig = getenv("DETRT_CONFIG");
+	//fprintf(stderr, "App name: %s\n", program_invocation_name);
+	fprintf(stderr, "App short name: %s\n", program_invocation_short_name);
+
+	
+	std::stringstream ss;
+	char* logpath = getenv("DETRT_CONFIG_LOGPATH");
+	if(logpath != NULL){
+		ss << logpath << "/";
+	}
+	ss << "logs/";
+	std::string dir = ss.str();
+	fprintf(stderr, "Log Dir: %s\n", dir.c_str());
+	if(NULL == opendir(dir.c_str())){
+	   mkdir(dir.c_str(), 0775);
+	}
+	
+	ss << program_invocation_short_name;
+	std::string appname = ss.str();
+	fprintf(stderr, "Log file: %s\n", dir.c_str());
+	
 	if(rtconfig == NULL){
 		WARNING_MSG("Not set env DETRT_CONFIG\n");
 	}
@@ -72,7 +101,7 @@ static _Runtime* GetRuntime(){
 			DEBUG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
-		RRRuntime* rt = new (mapped) RRRuntime ("/home/zhouxu/logs/", Mode_Record);
+		RRRuntime* rt = new (mapped) RRRuntime (appname, Mode_Record);
 		return rt;	
 	}
 	else if(strcmp(rtconfig, "Replay") == 0){
@@ -82,7 +111,7 @@ static _Runtime* GetRuntime(){
 			DEBUG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
-		RRRuntime* rt = new (mapped) RRRuntime ("/home/zhouxu/logs/", Mode_Replay);
+		RRRuntime* rt = new (mapped) RRRuntime (appname, Mode_Replay);
 		return rt;	
 	}
 	

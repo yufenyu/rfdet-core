@@ -189,7 +189,7 @@ FILE* RRSyncPolicy::getLogFile(int tid){
 	if(fds[tid] == NULL){
 		std::cerr << "Open log file " << logfilename << std::endl;
 		fds[tid] = fopen(logfilename.c_str(), mode);
-		ASSERT(fds[tid] != NULL, "open file failed!");
+		ASSERT(fds[tid] != NULL, "open log file(%s) failed!", logfilename.c_str());
 	}
 	return fds[tid];
 }
