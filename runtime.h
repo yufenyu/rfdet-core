@@ -20,6 +20,7 @@
 #include "structures.h"
 #include "thread.h"
 #include "defines.h"
+#include "strategy.h"
 
 typedef struct _LockItem{
 	int tid;
@@ -154,6 +155,9 @@ enum HappenBeforeReason{
 class _Runtime {
 	
 public:
+	virtual int threadExit() = 0;
+	virtual int threadEntryPoint(void* args) = 0;
+	
 	virtual void * malloc(size_t sz) = 0;
 	virtual void  free(void * addr) = 0;
 	virtual void * valloc(size_t sz) = 0;
@@ -206,6 +210,7 @@ class PthreadRuntime : public _Runtime {
 
 class ThreadPrivateData{
 	bool kernal_malloc;
+	MProtectStrategy strategy;
 public:
 	ThreadPrivateData() : kernal_malloc(false){}
 	inline bool IsKernalMalloc(){
@@ -214,11 +219,15 @@ public:
 	inline bool SetKernalMalloc(bool b){
 		kernal_malloc = b;
 	}
+	inline MProtectStrategy* getStrategy(){
+		return &strategy;
+	}
 };
 
-class HBRuntime {
+class HBRuntime : public _Runtime{
 	RuntimeDataMemory _metadata;
 	ThreadPrivateData* tpdata;
+	MProtectStrategy* strategy;
 private:
 	int internalLock(InternalLock* lock);
 	int internalUnlock(InternalLock* lock);
@@ -243,6 +252,10 @@ public:
 	int clearGC(); //Full GC: clear all the diff logs without checking the validation.
 
 public:
+	
+	virtual int threadExit();
+	virtual int threadEntryPoint(void* args);
+	
 	int protectSharedData();
 	int reprotectSharedData();
 	int unprotectSharedData();

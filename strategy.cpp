@@ -177,7 +177,6 @@ int MProtectStrategy::endSlice(){
 int MProtectStrategy::beginSlice(){
 	//RUNTIME::flushLogs();
 	me->currslice = NULL;
-
 	writeSet.clear();
 	reprotectRWPages();
 	me->slices.GetCurrentSlice();
@@ -187,6 +186,7 @@ int MProtectStrategy::beginSlice(){
 int MProtectStrategy::prePropagation(){
 	//doing nothing for now.
 }
+
 extern void* record_addr;
 extern size_t record_size;
 //unsigned int numPageFault = 0;
@@ -195,7 +195,7 @@ extern size_t record_size;
 int MProtectStrategy::writeMemory(void* addr, size_t len){
 
 	me->numpagefault ++;
-	unprotectMemory(addr, PAGE_SIZE);
+	instance->unprotectMemory(addr, PAGE_SIZE);
 
 	//std::cout << "writeMemory: addr = " << addr << std::endl;
 	
@@ -264,8 +264,7 @@ void segvHandle(int signum, siginfo_t * siginfo, void * context)
 
 
 struct sigaction gsiga;
-void MProtectStrategy::init()
-{
+void MProtectStrategy::init(){
 
     //old_siga = &gsiga;
     struct sigaction old_siga;
@@ -285,7 +284,6 @@ void MProtectStrategy::init()
       exit(-1);
     }
     sigprocmask(SIG_UNBLOCK, &siga.sa_mask, NULL);
-
 }
 
 void MProtectStrategy::protectMemory(void* addr, size_t size){
@@ -296,26 +294,24 @@ void MProtectStrategy::protectMemory(void* addr, size_t size){
 }
 
 void MProtectStrategy::unprotectMemory(void* addr, size_t size){
-	if(0 != mprotect((void*)PAGE_ALIGN_DOWN(addr), size, PROT_READ | PROT_WRITE))
-	{
+	if(0 != mprotect((void*)PAGE_ALIGN_DOWN(addr), size, PROT_READ | PROT_WRITE)){
 		VATAL_MSG("mprotect error: addr = %p, size = %zu\n" , addr, size);
 		_exit(1);
 	}
-	ASSERT(instance != NULL, "instance = %p\n", instance)
-	instance->rwPages[instance->rwPageNum] = addr;
-	instance->rwPageNum ++;
-	ASSERT(instance->rwPageNum < MAX_READ_WRITE_PAGE, "Too many pages to unprotect")
+	ASSERT(this != NULL, "instance = %p\n", this)
+	this->rwPages[this->rwPageNum] = addr;
+	this->rwPageNum ++;
+	ASSERT(this->rwPageNum < MAX_READ_WRITE_PAGE, "Too many pages to unprotect")
 }
 
 void MProtectStrategy::reprotectRWPages(){
-	for(int i = 0; i < instance->rwPageNum; i ++){
-		protectMemory(instance->rwPages[i], PAGE_SIZE);
+	for(int i = 0; i < this->rwPageNum; i ++){
+		protectMemory(this->rwPages[i], PAGE_SIZE);
 	}
-	instance->rwPageNum = 0;
+	this->rwPageNum = 0;
 }
 
 void MProtectStrategy::initOnThreadEntry(){
 	this->rwPageNum = 0;
 }
 
-MProtectStrategy threadprivateStrategy;

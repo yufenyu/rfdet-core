@@ -19,6 +19,7 @@
 #include "detsync.h"
 #include "strategy.h"
 
+RuntimeDataMemory * metadata;
 
 #ifdef UNUSED
 void reallocate_thread(){
@@ -35,79 +36,13 @@ extern int totalwrites;
 
 int thread_exit(){
 
-	NORMAL_MSG("Thread %d begins to exit...\n", me->tid);
-	metadata->numpagefault += me->numpagefault;
-	//metadata->allocpages += me->myallocator.allocatedpages;
-	//metadata->memfootprint += Heap::appHeap()->getUsedMemory(me->tid);
-	metadata->gc_count += me->gc_count;
 
-	STRATEGY::endSlice();
-	//HBRuntime::takeSnapshot();/*Write the modifications in logs!*/
-	//printf("Thread %d exit, takeSnapshot()\n");
-	//printf("Thread %d exit, flushLogs()\n");
-	//printf("Thread %d exit, flushLazyRead()\n");
-
-	me->vclock.incClock(me->tid);//increase my vector clock;
-
-	STRATEGY::beginSlice();
-	/*Dequeue this thread from the active list.*/
-	me->leaveActiveList();
-
-#ifdef _PROFILING
-	NORMAL_MSG("Thread(%d) gc time: %lld\n", me->tid, me->gc_time);
-	//printf("Thread(%d) signal time: %lld\n", me->tid, me->signaltime);
-	NORMAL_MSG("Thread(%d) write log time: %lld\n", me->tid, me->writelogtime);
-	NORMAL_MSG("Thread(%d) read log time: %lld\n", me->tid, me->readlogtime);
-	//printf("Thread(%d) protect shared data time: %lld\n", me->tid, me->protecttime);
-	NORMAL_MSG("Thread(%d) rate of serial merge: %f.\n", me->tid, (double)me->serialcount/(me->paracount + me->serialcount));
-#endif
-
-	me->finished = true;
-	//reallocate_thread();
-	WARNING_MSG("Thread %d leaving\n", me->tid);
-	//if(me->tid == 1){
-		//while(1){}
-	//}
-	return 0;
 }
 
 
-extern MProtectStrategy threadprivateStrategy;
+//extern MProtectStrategy threadprivateStrategy;
 int thread_entry_point(void* args){
-	NORMAL_MSG("thread_entry_point: args = %x\n", args);
-	thread_info_t* thread = (thread_info_t*)args;
-	DEBUG_MSG("Enter thread_entry_point, start_routine = %x\n", thread->start_routine);
-
-	me = thread;
-	me->init();
-
-	me->finished = false;
-	me->vclock.owner = me->tid;
-	me->vclock.incClock(me->tid);//increase my vector clock;
-	me->pid = getpid();
-	//global_twin_list->init(me->tid);
-
-
-	metadata->initOnThreadEntry(me->tid);
-	me->slices.initOnThreadEntry();
-	writeSet.initOnThreadEntry(me->tid);
-	//localbumppointer.initOnThreadEntry();
-	threadprivateStrategy.initOnThreadEntry();
-
-
-	
-#ifdef _GDB_DEBUG
-	printf("Thread(%d): sleep for attach...\n", me->tid, me->pid);
-	sleep(20);
-#endif
-
-	RUNTIME->protectSharedData();
-	DEBUG_MSG("Thread(%d) start: pid = %d\n", me->tid, me->pid);
-	void* res = thread->start_routine(thread->args);
-	DEBUG_MSG("Thread(%d) end function:\n", me->tid);
-	//printf("After call the start_routine\n");
-	thread_exit();
-	return 0;
+	return RUNTIME->threadEntryPoint(args);
 }
 
 void* shared_data_low;
@@ -277,6 +212,83 @@ ThreadPrivateData threadprivatedata;
 
 HBRuntime::HBRuntime(){
 	this->tpdata = &threadprivatedata;
+	metadata = &_metadata;
+	strategy = tpdata->getStrategy();
+}
+
+int HBRuntime::threadExit(){
+	NORMAL_MSG("Thread %d begins to exit...\n", me->tid);
+	metadata->numpagefault += me->numpagefault;
+	//metadata->allocpages += me->myallocator.allocatedpages;
+	//metadata->memfootprint += Heap::appHeap()->getUsedMemory(me->tid);
+	metadata->gc_count += me->gc_count;
+
+	strategy->endSlice();
+	//HBRuntime::takeSnapshot();/*Write the modifications in logs!*/
+	//printf("Thread %d exit, takeSnapshot()\n");
+	//printf("Thread %d exit, flushLogs()\n");
+	//printf("Thread %d exit, flushLazyRead()\n");
+
+	me->vclock.incClock(me->tid);//increase my vector clock;
+
+	strategy->beginSlice();
+	/*Dequeue this thread from the active list.*/
+	me->leaveActiveList();
+
+#ifdef _PROFILING
+	NORMAL_MSG("Thread(%d) gc time: %lld\n", me->tid, me->gc_time);
+	//printf("Thread(%d) signal time: %lld\n", me->tid, me->signaltime);
+	NORMAL_MSG("Thread(%d) write log time: %lld\n", me->tid, me->writelogtime);
+	NORMAL_MSG("Thread(%d) read log time: %lld\n", me->tid, me->readlogtime);
+	//printf("Thread(%d) protect shared data time: %lld\n", me->tid, me->protecttime);
+	NORMAL_MSG("Thread(%d) rate of serial merge: %f.\n", me->tid, (double)me->serialcount/(me->paracount + me->serialcount));
+#endif
+
+	me->finished = true;
+	//reallocate_thread();
+	WARNING_MSG("Thread %d leaving\n", me->tid);
+	//if(me->tid == 1){
+		//while(1){}
+	//}
+	return 0;	
+}
+
+int HBRuntime::threadEntryPoint(void* args){
+	NORMAL_MSG("thread_entry_point: args = %x\n", args);
+	thread_info_t* thread = (thread_info_t*)args;
+	DEBUG_MSG("Enter thread_entry_point, start_routine = %x\n", thread->start_routine);
+
+	me = thread;
+	me->init();
+
+	me->finished = false;
+	me->vclock.owner = me->tid;
+	me->vclock.incClock(me->tid);//increase my vector clock;
+	me->pid = getpid();
+	//global_twin_list->init(me->tid);
+
+
+	metadata->initOnThreadEntry(me->tid);
+	me->slices.initOnThreadEntry();
+	writeSet.initOnThreadEntry(me->tid);
+	//localbumppointer.initOnThreadEntry();
+	this->strategy->initOnThreadEntry();
+	//threadprivateStrategy.initOnThreadEntry();
+
+
+	
+#ifdef _GDB_DEBUG
+	printf("Thread(%d): sleep for attach...\n", me->tid, me->pid);
+	sleep(20);
+#endif
+
+	RUNTIME->protectSharedData();
+	DEBUG_MSG("Thread(%d) start: pid = %d\n", me->tid, me->pid);
+	void* res = thread->start_routine(thread->args);
+	DEBUG_MSG("Thread(%d) end function:\n", me->tid);
+	
+	this->threadExit();
+	return 0;
 }
 
 int HBRuntime::protectSharedData(){
@@ -410,7 +422,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	vector_clock old_time = me->vclock;
 	if(usercall){
 		//int logcount = takeSnapshot(); /*Log the diffs for this clock.*/
-		STRATEGY::endSlice();
+		strategy->endSlice();
 	}
 
 	//vector_clock predict_time = me->vclock;
@@ -462,7 +474,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	/* the parallel execution before waiting to enter the serial execution.*/
 	if(is_happen_before && usercall){
 		//unprotectSharedData();
-		STRATEGY::prePropagation();
+		strategy->prePropagation();
 	}
 
 	int paracount = 0, serialcount = 0;
@@ -474,7 +486,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	while(next != me->tid){
 		if(is_happen_before){
 			predict_time.incClock(&lock->vtime, old_owner);
-			paracount += STRATEGY::doPropagation(old_owner, &old_time, &predict_time, SYNC_LOCK);
+			paracount += strategy->doPropagation(old_owner, &old_time, &predict_time, SYNC_LOCK);
 			//paracount += restoreSnapshot(old_owner, old_time, &predict_time, HB_REASON_LOCK);
 		}
 		//Util::wait_for_a_while();
@@ -494,7 +506,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	if(is_happen_before){
 		me->vclock.incClock(&lock->vtime, old_owner);
 		//serialcount = HBRuntime::restoreSnapshot(old_owner, &old_time, &me->vclock, HB_REASON_LOCK);
-		serialcount = STRATEGY::doPropagation(old_owner, &old_time, &me->vclock, SYNC_LOCK);
+		serialcount = strategy->doPropagation(old_owner, &old_time, &me->vclock, SYNC_LOCK);
 		DEBUG_MSG("Thread %d total merged modifications: %d\n", me->tid, paracount + serialcount);
 		//dump_data();
 	}
@@ -508,7 +520,7 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 
 	if(usercall){
 		//flushLogs();
-		STRATEGY::beginSlice();
+		strategy->beginSlice();
 	}
 
 	DEBUG_MSG("Thread %d leaving rawMutexLock\n", me->tid);
@@ -525,7 +537,7 @@ int HBRuntime::rawMutexUnlock(pthread_mutex_t * mutex, bool usercall){
 	DEBUG_MSG("Thread (%d) mutex unlock %x\n", me->tid, mutex);
 	if(usercall){
 		//int count = takeSnapshot();
-		STRATEGY::endSlice();
+		strategy->endSlice();
 	}
 
 	InternalLock* lock = metadata->ilocks.FindOrCreateLock(mutex);
@@ -544,7 +556,7 @@ int HBRuntime::rawMutexUnlock(pthread_mutex_t * mutex, bool usercall){
 	//Util::unlock(&lock->ilock);
 	if(usercall){
 		//flushLogs();
-		STRATEGY::beginSlice();
+		strategy->beginSlice();
 	}
 	//global_twin_list->reprotect_pages();
 	//global_twin_list->flush_diffs();/*Flush the twin pages, unmap them!*/
@@ -675,7 +687,7 @@ int HBRuntime::threadJoin(pthread_t tid, void ** val){
 	 * */
 	vector_clock old_time = me->vclock;
 	//takeSnapshot();
-	STRATEGY::endSlice();
+	strategy->endSlice();
 	//unprotectSharedData();
 	
 	me->vclock.incClock(me->tid);
@@ -684,7 +696,7 @@ int HBRuntime::threadJoin(pthread_t tid, void ** val){
 		thread_info_t* thread = &metadata->threads[tid];
 		me->vclock.incClock(&thread->vclock, thread->tid);
 		//printf("Join-Happen-Before: before resotreSnapshot: \n");
-		int count = STRATEGY::doPropagation(tid, &old_time, &me->vclock, SYNC_JOIN);
+		int count = strategy->doPropagation(tid, &old_time, &me->vclock, SYNC_JOIN);
 		DEBUG_MSG("Join-Happen-Before: Merge modifications: %d\n", count);
 	}
 
@@ -693,7 +705,7 @@ int HBRuntime::threadJoin(pthread_t tid, void ** val){
 	//global_twin_list->flush_diffs();/*Flush the twin pages, unmap them!*/
 
 	//flushLogs();
-	STRATEGY::beginSlice();
+	strategy->beginSlice();
 	/*TODO: handle the exceptions!*/
 	//printf("pthread_join finished: child = %d\n", child);
 	clearThreadStructures(tid);
@@ -725,7 +737,7 @@ int HBRuntime::paraLockWait(InternalLock* lock, bool is_happen_before, vector_cl
 	while(next != me->tid){
 		if(is_happen_before){
 			predict_time.incClock(&lock->vtime, old_owner);
-			paracount += STRATEGY::doPropagation(old_owner, old_time, &predict_time, SYNC_LOCK);
+			paracount += strategy->doPropagation(old_owner, old_time, &predict_time, SYNC_LOCK);
 		}
 		//Util::wait_for_a_while();
 		next = lock->next_owner();
@@ -806,7 +818,7 @@ int HBRuntime::mutexTrylock(pthread_mutex_t * mutex){
 	lock->ptime = predict_time;
 	if(is_happen_before){
 		//int logcount = takeSnapshot(); /*Log the diffs for this clock.*/
-		STRATEGY::endSlice();
+		strategy->endSlice();
 		me->vclock.incClock(me->tid); /*Increase vector clock, enter the next slice(epoch).*/
 		//unprotectSharedData();
 	}
@@ -818,7 +830,7 @@ int HBRuntime::mutexTrylock(pthread_mutex_t * mutex){
 	int next = lock->next_owner();
 	while(next != me->tid){
 		if(old_owner != INVALID_THREAD_ID && old_owner != me->tid){
-			paracount += STRATEGY::doPropagation(old_owner, &old_time, &predict_time, SYNC_TRYLOCK);
+			paracount += strategy->doPropagation(old_owner, &old_time, &predict_time, SYNC_TRYLOCK);
 		}
 		//Util::wait_for_a_while();
 		next = lock->next_owner();
@@ -838,11 +850,11 @@ int HBRuntime::mutexTrylock(pthread_mutex_t * mutex){
 	// printf("--owner is %d, old_owner is %d\n", owner, old_owner);
 	if(is_happen_before){
 		me->vclock.incClock(&lock->vtime, old_owner);
-		serialcount = STRATEGY::doPropagation(old_owner, &old_time, &me->vclock, SYNC_TRYLOCK);
+		serialcount = strategy->doPropagation(old_owner, &old_time, &me->vclock, SYNC_TRYLOCK);
 	}
 
 	if(is_happen_before){
-		STRATEGY::beginSlice();
+		strategy->beginSlice();
 	}
 
 #ifdef _PROFILING
@@ -886,7 +898,7 @@ int HBRuntime::condWait(pthread_cond_t * cond, pthread_mutex_t * mutex){
 
 	//rawMutexUnlock(mutex);
 	//takeSnapshot();
-	STRATEGY::endSlice();
+	strategy->endSlice();
 	rawMutexUnlock(mutex, false);
 	//flushLogs();
 
@@ -907,7 +919,7 @@ int HBRuntime::condWait(pthread_cond_t * cond, pthread_mutex_t * mutex){
 
 	/*Wake up!!!*/
 	me->vclock.incClock(&icond->vtime, icond->sender);
-	int count = STRATEGY::doPropagation(icond->sender, &old_time, &me->vclock, HB_REASON_CONDWAIT);
+	int count = strategy->doPropagation(icond->sender, &old_time, &me->vclock, HB_REASON_CONDWAIT);
 	//printf("Cond Wait: Merge modifications: %d\n", count);
 
 	DEBUG_MSG("Cond Happen-Before: thread %d----------------> thread %d\n", icond->sender, me->tid);
@@ -918,7 +930,7 @@ int HBRuntime::condWait(pthread_cond_t * cond, pthread_mutex_t * mutex){
 	rawMutexLock(mutex, SYNC_LOCK, false);
 
 	//flushLogs();
-	STRATEGY::beginSlice();
+	strategy->beginSlice();
 
 	NORMAL_MSG("Thread(%d) comes out of condwait.\n", me->tid);
 	me->insync = false;
@@ -936,7 +948,7 @@ int HBRuntime::condSignal(pthread_cond_t * cond){
 	thread_info_t* thread = icond->Signal();
 	if(thread != NULL){
 		//takeSnapshot();
-		STRATEGY::endSlice();
+		strategy->endSlice();
 		icond->vtime = me->vclock;
 		icond->sender = me->tid;
 		icond->wakeup(thread);
@@ -946,7 +958,7 @@ int HBRuntime::condSignal(pthread_cond_t * cond){
 
 	if(thread != NULL){
 		//flushLogs();
-		STRATEGY::beginSlice();
+		strategy->beginSlice();
 	}
 	me->insync = false;
 	tryGC();
@@ -967,7 +979,7 @@ int HBRuntime::condBroadcast(pthread_cond_t * cond){
 	thread_info_t* front = icond->Broadcast();
 	if(front != NULL){
 		//takeSnapshot();
-		STRATEGY::endSlice();
+		strategy->endSlice();
 		icond->vtime = me->vclock;
 		icond->sender = me->tid;
 	}
@@ -983,7 +995,7 @@ int HBRuntime::condBroadcast(pthread_cond_t * cond){
 	/*If at least 1 thread is waked up, reprotect the shared data.*/
 	if(count >= 1){
 		//flushLogs();
-		STRATEGY::beginSlice();
+		strategy->beginSlice();
 	}
 	NORMAL_MSG("Thread(%d): come out of broadcast. wake up %d threads\n", me->tid, count);
 	me->insync = false;
@@ -995,7 +1007,7 @@ int HBRuntime::condBroadcast(pthread_cond_t * cond){
 void HBRuntime::beforeBarrier(){
 	me->vclock.incClock(me->tid);
 	//RUNTIME::takeSnapshot();
-	STRATEGY::endSlice();
+	strategy->endSlice();
 	printf("Thread %d enter barrier\n", me->tid);
 }
 
@@ -1012,7 +1024,7 @@ void HBRuntime::barrierDeliver(){
 		me->vclock.incClock(&thread->vclock, i);
 		//Fixme: old_time decide the merging order of all modifications, i.e., whether they are identical
 		//       in all threads, as the reviewer pointed out.
-		STRATEGY::doPropagation(i, &old_time, &me->vclock, SYNC_BARRIER);
+		strategy->doPropagation(i, &old_time, &me->vclock, SYNC_BARRIER);
 	}
 }
 
@@ -1077,7 +1089,7 @@ int HBRuntime::barrier_wait(pthread_barrier_t* barr){
 	//cout<<"barrier->size = " << ibarrier->left << endl;
 	me->vclock.incClock(me->tid);
 	//RUNTIME::takeSnapshot();
-	STRATEGY::endSlice();
+	strategy->endSlice();
 	NORMAL_MSG("Thread %d enter barrier, tnum = %d\n", me->tid, ibarrier->left);
 
 	//beforeBarrier();
@@ -1088,7 +1100,7 @@ int HBRuntime::barrier_wait(pthread_barrier_t* barr){
 	me->vclock.incClock(me->tid);
 	NORMAL_MSG("Thread %d leaving barrier\n", me->tid);
 	clearGC();
-	STRATEGY::beginSlice();
+	strategy->beginSlice();
 
 	me->insync = false;
 }
@@ -1228,7 +1240,7 @@ void * HBRuntime::realloc(void * ptr, size_t sz){
 }
 
 void HBRuntime::init(){
-	STRATEGY::init();
+	strategy->init();
 	Heap* heap = Heap::getHeap();
 	//void* heap = (void*)getHeap();
 	if(heap == NULL){
@@ -1245,6 +1257,8 @@ void HBRuntime::init(){
 	
 	DEBUG_MSG("HBDet: before init_mainthread\n");
 	init_mainthread();
+	
+	//metadata = this->getMetadata();
 }
 
 uint64 Util::timekeeper = 0;

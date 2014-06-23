@@ -31,7 +31,7 @@ void finalize() __attribute__((destructor));
 
 
 ////////////////////////////Global Variables/////////////////////////////
-RuntimeDataMemory * metadata;
+
 InternalLockMap* internal_locks;
 /*TODO: assert me is not in the region of global variables.*/
 thread_info_t * me;
@@ -39,6 +39,7 @@ thread_info_t * me;
 static bool initialized = false;
 
 HBRuntime* RUNTIME;
+
 
 /**
  * _init{malloc, pthread_mutex_lock, etc}| ----> initialize(init real hook functions)| ------> main()
@@ -63,7 +64,6 @@ void initialize() {
 	RUNTIME = new (mapped) HBRuntime ();
 	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
 	
-	metadata = RUNTIME->getMetadata();
 	RUNTIME->init();
 	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
 	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")

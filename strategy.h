@@ -53,15 +53,15 @@ public:
 
 	/*TODO: add a type parameter to beginSlice and endSlice to indicate what kind of synchronization
 	  cut the slice.*/
-	static int beginSlice();
-	static int endSlice();
-	static int prePropagation();
+	int beginSlice();
+	int endSlice();
+	int prePropagation();
 	/*A callback function invoked by signal handler or instrumentation functions.*/
 	static int writeMemory(void* addr, size_t len);
-	static void init();
-	static void protectMemory(void* addr, size_t size); // Read
-	static void unprotectMemory(void* addr, size_t size); // Read/Write
-	static void reprotectRWPages();
+	void init();
+	void protectMemory(void* addr, size_t size); // Read
+	void unprotectMemory(void* addr, size_t size); // Read/Write
+	void reprotectRWPages();
 };
 
 
