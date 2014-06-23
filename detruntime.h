@@ -2,7 +2,7 @@
 #define DMTRUNTIME_H_
 
 #include "runtime.h"
-
+#include "detsync.h"
 
 class MemModSpace : public PageSizeMemory<METADATA_MMP_SPACE_SIZE, META_CHUNK_SIZE, MAX_THREAD_NUM> {};
 class KernalSpace : public ImmutableMemory<META_KERNAL_SPACE_SIZE> {};
@@ -107,8 +107,11 @@ extern RuntimeDataMemory *metadata;
 
 class HBRuntime : public _Runtime{
 	RuntimeDataMemory _metadata;
+	
+	SyncPolicy* syncpolicy;
 	ThreadPrivateData* tpdata;
 	MProtectStrategy* strategy;
+	
 private:
 	int internalLock(InternalLock* lock);
 	int internalUnlock(InternalLock* lock);
@@ -116,7 +119,10 @@ private:
 	int rawMutexUnlock(pthread_mutex_t * mutex, bool usercall);
 	//static int paraLockWait(InternalLock* lock, bool is_happen_before, vector_clock* old_time, int old_owner) __attribute__ ((deprecated));
 	bool gcpoll();
-
+	
+protected:
+	virtual SyncPolicy* getSyncPolicy();
+	
 public:
 	HBRuntime();
 	bool isSingleThreaded();
@@ -216,10 +222,19 @@ inline HBRuntime* GetHBRuntime(){
 }
 
 
-class DMTRuntime
-{
+/*Deterministic multithreading with Kendo algorithm*/
+class DMTRuntime : public HBRuntime {
 public:
 	DMTRuntime();
+};
+
+class RRRuntime : public HBRuntime {
+	std::string logfile;
+protected:
+	virtual SyncPolicy* getSyncPolicy();
+public:
+	
+	RRRuntime(std::string file);
 };
 
 #endif /*DMTRUNTIME_H_*/

@@ -16,9 +16,16 @@
 class InternalLock;
 class SyncPolicy {
 public:
-	virtual int lock(void* l) = 0;
-	virtual int trylock(void* l) = 0;
-	virtual int unlock(void* l) = 0;
+	virtual int lock(InternalLock* l) = 0;
+	virtual int trylock(InternalLock* l) = 0;
+	virtual int unlock(InternalLock* l) = 0;
+};
+
+class NondetSyncPolicy : public SyncPolicy {
+public:
+	virtual int lock(InternalLock* l);
+	virtual int trylock(InternalLock* l);
+	virtual int unlock(InternalLock* l);
 };
 
 struct ReplayLog{
@@ -43,6 +50,7 @@ public:
 	virtual int lock(InternalLock* l);
 	virtual int trylock(InternalLock* l);
 	virtual int unlock(InternalLock* l);
+	
 private:
 	FILE* getLogFile(int tid);
 	
@@ -58,6 +66,7 @@ private:
 	void moveToNextLog();
 };
 
+/*
 class DetSync {
 public:
 	DetSync();
@@ -67,5 +76,6 @@ public:
 	static int detTrylock(void* l);
 	static int detUnlock(void* l);
 };
+*/
 
 #endif /* DETSYNC_H_ */

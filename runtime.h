@@ -131,10 +131,7 @@ public:
 };
 
 
-
 extern _Runtime* RUNTIME;
-
-
 
 
 #endif /* RUNTIME_H_ */

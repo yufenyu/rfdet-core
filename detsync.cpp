@@ -14,45 +14,22 @@
 #include "utils.h"
 #include "detruntime.h"
 
-DetSync::DetSync() {
-	// TODO Auto-generated constructor stub
-}
 
-DetSync::~DetSync() {
-	// TODO Auto-generated destructor stub
-}
 
-int DetSync::detLock(void* mutex){
-	InternalLock* lock = (InternalLock*) mutex;
-	//int old_owner = detLock(lock);
-#ifdef USING_KENDO
-	//return kendo_lock(lock);
-#else
+int NondetSyncPolicy::lock(InternalLock* lock){
 	Util::spinlock(&lock->ilock);
 	return 0;
-#endif
 }
 
-int DetSync::detTrylock(void* mutex){
-	InternalLock* lock = (InternalLock*) mutex;
-#ifdef USING_KENDO
-	return kendo_trylock(lock);
-#else
+int NondetSyncPolicy::trylock(InternalLock* lock){
 	if(!Util::spintrylock(&lock->ilock)){
 		return EBUSY;
 	}
-	return 0;
-#endif
 }
 
-int DetSync::detUnlock(void* mutex){
-	InternalLock* lock = (InternalLock*) mutex;
-#ifdef USING_KENDO
-	//return kendo_unlock(mutex);
-#else
+int NondetSyncPolicy::unlock(InternalLock* lock){
 	Util::unlock(&lock->ilock);
 	return 0;
-#endif
 }
 
 

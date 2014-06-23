@@ -163,6 +163,13 @@ HBRuntime::HBRuntime(){
 	this->tpdata = &threadprivatedata;
 	metadata = &_metadata;
 	strategy = tpdata->getStrategy();
+	//void* buf = _metadata.meta_alloc(sizeof(NondetSyncPolicy));
+	this->syncpolicy = getSyncPolicy();
+}
+
+SyncPolicy* HBRuntime::getSyncPolicy(){
+	void* buf = _metadata.meta_alloc(sizeof(NondetSyncPolicy));
+	return new (buf) NondetSyncPolicy;
 }
 
 int HBRuntime::finalize(){
@@ -436,10 +443,10 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	InternalLock* lock = metadata->ilocks.FindOrCreateLock(mutex);
 
 	if(synctype == SYNC_LOCK){
-		DetSync::detLock(lock);
+		syncpolicy->lock(lock);
 	}
 	else if(synctype == SYNC_TRYLOCK){
-		int ret = DetSync::detTrylock(lock);
+		int ret = syncpolicy->trylock(lock);
 		if(ret == EBUSY){
 			return EBUSY;
 		}
@@ -449,8 +456,8 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	if(old_owner == INVALID_THREAD_ID){
 		old_owner = lock->owner;
 	}
-
-	DetSync::detUnlock(lock);
+	
+	syncpolicy->unlock(lock);
 
 	//Util::spinlock(&lock->ilock);
 	//bool is_happen_before = false;
@@ -1264,6 +1271,16 @@ void HBRuntime::init(){
 	//metadata = this->getMetadata();
 }
 
+
+RRRuntime::RRRuntime(std::string file) : logfile (file){
+	
+}
+
+SyncPolicy* RRRuntime::getSyncPolicy(){
+	void* buf = this->getMetadata()->meta_alloc(sizeof(RRSyncPolicy));
+	SyncPolicy* sp = new (buf) RRSyncPolicy(logfile);
+	return sp;
+}
 
 DMTRuntime::DMTRuntime(){
 	
