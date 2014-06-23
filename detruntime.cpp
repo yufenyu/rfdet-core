@@ -159,18 +159,13 @@ int getThreadNum(){
 ThreadPrivateData threadprivatedata;
 
 HBRuntime::HBRuntime(){
-	NORMAL_MSG("Running with DMT...");
+	fprintf(stderr, "Running with DMT...\n");
 	this->tpdata = &threadprivatedata;
 	metadata = &_metadata;
 	strategy = tpdata->getStrategy();
-	//void* buf = _metadata.meta_alloc(sizeof(NondetSyncPolicy));
-	this->syncpolicy = getSyncPolicy();
+	//this->syncpolicy = getSyncPolicy();
 }
 
-SyncPolicy* HBRuntime::getSyncPolicy(){
-	void* buf = _metadata.meta_alloc(sizeof(NondetSyncPolicy));
-	return new (buf) NondetSyncPolicy;
-}
 
 int HBRuntime::finalize(){
 #ifdef _PROFILING
@@ -1247,6 +1242,12 @@ void * HBRuntime::realloc(void * ptr, size_t sz){
 	return Heap::getHeap()->realloc(ptr, sz);
 }
 
+SyncPolicy* HBRuntime::createSyncPolicy(){	
+	void* buf = _metadata.meta_alloc(sizeof(NondetSyncPolicy));
+	SyncPolicy* sp = new (buf) NondetSyncPolicy;
+	return sp;
+}
+
 void HBRuntime::init(){
 	strategy->init();
 	Heap* heap = Heap::getHeap();
@@ -1269,17 +1270,28 @@ void HBRuntime::init(){
 	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
 	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
 	//metadata = this->getMetadata();
-}
-
-
-RRRuntime::RRRuntime(std::string file) : logfile (file){
 	
+	syncpolicy = createSyncPolicy();
 }
 
-SyncPolicy* RRRuntime::getSyncPolicy(){
+RRRuntime::RRRuntime(std::string file, int mode) : logfile (file){
+	std::cerr << "Running with Record&Replay System" << std::endl;
+	metadata->getRuntimeStatus().setRunningMode(mode);
+	//this->setSyncPolicy(getSyncPolicy());
+}
+
+SyncPolicy* RRRuntime::createSyncPolicy(){
+	std::cerr << "Calling RRRuntime::createSyncPolicy() to create Record&Replay Sync Policy" << std::endl;
 	void* buf = this->getMetadata()->meta_alloc(sizeof(RRSyncPolicy));
 	SyncPolicy* sp = new (buf) RRSyncPolicy(logfile);
 	return sp;
+}
+
+int RRRuntime::threadExit(){
+	HBRuntime::threadExit();
+	SyncPolicy* sp = this->getSyncPolicy();
+	RRSyncPolicy* rrsp = dynamic_cast<RRSyncPolicy*>(sp);
+	rrsp->closeLogFile(me->tid);
 }
 
 DMTRuntime::DMTRuntime(){

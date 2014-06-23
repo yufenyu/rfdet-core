@@ -121,7 +121,13 @@ private:
 	bool gcpoll();
 	
 protected:
-	virtual SyncPolicy* getSyncPolicy();
+	virtual SyncPolicy* createSyncPolicy();
+	
+public:
+	inline SyncPolicy* getSyncPolicy(){
+		return syncpolicy;
+	}
+	
 	
 public:
 	HBRuntime();
@@ -137,13 +143,10 @@ public:
 	}
 
 	int clearGC(); //Full GC: clear all the diff logs without checking the validation.
-
+	
+	
+	/* Internal methods for other runtime components. */
 public:
-	
-	virtual int finalize();
-	virtual int threadExit();
-	virtual int threadEntryPoint(void* args);
-	
 	void initMainthread();
 	int protectSharedData();
 	int reprotectSharedData();
@@ -165,22 +168,8 @@ public:
 	int prefetchModify(int from, int to, vector_clock* old_time, vector_clock* curr_time);
 	//static int mergeLog(Slice* flog);
 	//static int register_adhoc(void* cond);
-
-	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
-	virtual int threadJoin(pthread_t tid, void ** val);
-	virtual int threadCancel(pthread_t tid);
-	virtual int mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr);
-	virtual int mutexLock(pthread_mutex_t * mutex);
-	virtual int mutexTrylock(pthread_mutex_t * mutex);
-	virtual int mutexUnlock(pthread_mutex_t * mutex);
-	//static int mutexTrylock(pthread_mutex_t * mutex);
-	virtual int condInit(pthread_cond_t* cond, const pthread_condattr_t * attr);
-	virtual int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
-	virtual int condSignal(pthread_cond_t * cond);
-	virtual int condBroadcast(pthread_cond_t * cond);
 	
-	virtual int barrier_wait(pthread_barrier_t* barrier);
-
+	
 	int barrierImpl(int tnum);
 
 	bool isSharedMemory(void* addr);
@@ -195,14 +184,6 @@ public:
 	//static int adhocsync_read(int* addr);
 	//static int adhocsync_write(int* addr, int value);
 	//static int adhocsync_rwait(int* cond, int value);
-
-	
-	virtual void * malloc(size_t sz);
-	virtual void  free(void * addr);
-	virtual void * valloc(size_t sz);
-	virtual void * calloc(size_t nmemb, size_t sz);
-	virtual void * realloc(void * ptr, size_t sz);
-	
 	RuntimeDataMemory* getMetadata(){
 		return &_metadata;
 	}
@@ -211,13 +192,40 @@ public:
 		return tpdata;
 	}
 	
+	
+	
+public: /* Multithreading interface methods */
+	virtual int finalize();
+	virtual int threadExit();
+	virtual int threadEntryPoint(void* args);
+	
+	virtual int threadCreate (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg);
+	virtual int threadJoin(pthread_t tid, void ** val);
+	virtual int threadCancel(pthread_t tid);
+	virtual int mutexInit(pthread_mutex_t* mutex, const pthread_mutexattr_t * attr);
+	virtual int mutexLock(pthread_mutex_t * mutex);
+	virtual int mutexTrylock(pthread_mutex_t * mutex);
+	virtual int mutexUnlock(pthread_mutex_t * mutex);
+	//static int mutexTrylock(pthread_mutex_t * mutex);
+	virtual int condInit(pthread_cond_t* cond, const pthread_condattr_t * attr);
+	virtual int condWait(pthread_cond_t * cond, pthread_mutex_t * mutex);
+	virtual int condSignal(pthread_cond_t * cond);
+	virtual int condBroadcast(pthread_cond_t * cond);
+	virtual int barrier_wait(pthread_barrier_t* barrier);
+
+	virtual void * malloc(size_t sz);
+	virtual void  free(void * addr);
+	virtual void * valloc(size_t sz);
+	virtual void * calloc(size_t nmemb, size_t sz);
+	virtual void * realloc(void * ptr, size_t sz);
+
 	virtual void init();
 	
 };
 
 inline HBRuntime* GetHBRuntime(){
 	HBRuntime* rt = dynamic_cast<HBRuntime*>(RUNTIME);
-	ASSERT(rt != NULL, "RUNTIME is not HBRuntime")
+	ASSERT(rt != NULL, "RUNTIME is not HBRuntime");
 	return rt;
 }
 
@@ -230,11 +238,14 @@ public:
 
 class RRRuntime : public HBRuntime {
 	std::string logfile;
+	
 protected:
-	virtual SyncPolicy* getSyncPolicy();
+	virtual SyncPolicy* createSyncPolicy();
+	
 public:
 	
-	RRRuntime(std::string file);
+	RRRuntime(std::string file, int mode);
+	virtual int threadExit(); 
 };
 
 #endif /*DMTRUNTIME_H_*/

@@ -15,7 +15,6 @@
 #include "detruntime.h"
 
 
-
 int NondetSyncPolicy::lock(InternalLock* lock){
 	Util::spinlock(&lock->ilock);
 	return 0;
@@ -31,8 +30,6 @@ int NondetSyncPolicy::unlock(InternalLock* lock){
 	Util::unlock(&lock->ilock);
 	return 0;
 }
-
-
 
 int RRSyncPolicy::lock(InternalLock* l){
 	RuntimeStatus& rt = metadata->getRuntimeStatus();
@@ -105,7 +102,7 @@ int RRSyncPolicy::recordTrylock(InternalLock* l){
 	//else{
 	//	thread->failednum ++;
 	//}
-	ASSERT(false, "Not implemented")
+	ASSERT(false, "Not implemented");
 	return EBUSY;
 }
 
@@ -126,7 +123,7 @@ int RRSyncPolicy::replayTrylock(InternalLock* l){
 	//else{
 	//	thread->failednum ++;
 	//}
-	ASSERT(false, "Not implemented")
+	ASSERT(false, "Not implemented");
 	return EBUSY;
 }
 
@@ -144,13 +141,14 @@ int RRSyncPolicy::replayUnlock(InternalLock* l){
 
 void RRSyncPolicy::writeLog(int tid, uint64_t locknum, uint64_t version, uint32_t failednum){
 	FILE* file = this->getLogFile(tid);
+	ASSERT(file != NULL, "Open file for Thread(%d) failed\n", tid);
 	ReplayLog log;
 	log.tid = tid;
 	log.locknum = locknum;
 	log.version = version;
 	log.failednum = failednum;
 	size_t ret = fwrite(&log, sizeof(log), 1, file);
-	ASSERT(ret == sizeof(log), "Write log failed.")
+	ASSERT(ret == 1, "Write log failed, write %d bytes\n", ret);
 }
 
 
@@ -158,7 +156,7 @@ ReplayLog RRSyncPolicy::readLog(int tid, uint64_t locknum){
 	FILE* file = this->getLogFile(tid);
 	ReplayLog log;
 	size_t ret = fread(&log, sizeof(log), 1, file);
-	ASSERT(ret == sizeof(log), "Read log failed.");
+	ASSERT(ret == 1, "Read log failed.");
 	return log;
 }
 
@@ -172,9 +170,13 @@ void RRSyncPolicy::waitStatus(ReplayLog& log, InternalLock* lock){
 
 
 void RRSyncPolicy::moveToNextLog(){
-	
 }
 
+void RRSyncPolicy::closeLogFile(int tid){
+	FILE* file = fds[tid];
+	ASSERT(file != NULL, "file = NULL");
+	fclose(fds[tid]);
+}
 
 FILE* RRSyncPolicy::getLogFile(int tid){
 	std::stringstream ss;
@@ -183,6 +185,7 @@ FILE* RRSyncPolicy::getLogFile(int tid){
 	RuntimeStatus& rt = metadata->getRuntimeStatus();
 	const char* mode = rt.IsRecording() ? "w" : "r";
 	if(fds[tid] == NULL){
+		std::cerr << "Open log file " << logfilename << std::endl;
 		fds[tid] = fopen(logfilename.c_str(), mode);
 		ASSERT(fds[tid] != NULL, "open file failed!");
 	}

@@ -72,7 +72,7 @@ static _Runtime* GetRuntime(){
 			DEBUG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
-		HBRuntime* rt = new (mapped) HBRuntime ();
+		RRRuntime* rt = new (mapped) RRRuntime ("logs", Mode_Record);
 		return rt;	
 	}
 	else if(strcmp(rtconfig, "Replay") == 0){
@@ -82,7 +82,7 @@ static _Runtime* GetRuntime(){
 			DEBUG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
-		HBRuntime* rt = new (mapped) HBRuntime ();
+		RRRuntime* rt = new (mapped) RRRuntime ("logs", Mode_Replay);
 		return rt;	
 	}
 	

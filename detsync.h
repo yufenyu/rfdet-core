@@ -51,6 +51,8 @@ public:
 	virtual int trylock(InternalLock* l);
 	virtual int unlock(InternalLock* l);
 	
+	void closeLogFile(int tid);
+	
 private:
 	FILE* getLogFile(int tid);
 	
