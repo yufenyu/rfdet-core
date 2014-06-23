@@ -162,10 +162,12 @@ ReplayLog RRSyncPolicy::readLog(int tid, uint64_t locknum){
 
 
 void RRSyncPolicy::waitStatus(ReplayLog& log, InternalLock* lock){
-	ASSERT(lock->getVersion() <= log.version, "lock version increase too quickly")
+	ASSERT(lock->getVersion() <= log.version, "lock version increase too quickly");
 	while(lock->getVersion() < log.version){
 		Util::wait_for_a_while();
 	}
+	ASSERT(lock->getVersion() == log.version, 
+			"Version incorrect: %ul vs %ul\n", lock->getVersion(), log.version);
 }
 
 

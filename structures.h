@@ -75,7 +75,7 @@ private:
 	 * 'locked' is used to support nested lock.
 	 * */
 	bool locked;
-	uint64_t version;
+	volatile uint64_t version;
 public:
 	void* mutex; /*The corresponding user application mutex.*/
 	int ilock;  /*internal lock*/
