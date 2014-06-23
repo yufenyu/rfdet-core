@@ -33,13 +33,69 @@ void finalize() __attribute__((destructor));
 ////////////////////////////Global Variables/////////////////////////////
 
 InternalLockMap* internal_locks;
-/*TODO: assert me is not in the region of global variables.*/
 thread_info_t * me;
-//bool kernal_malloc = false;
 static bool initialized = false;
+_Runtime* RUNTIME;
 
-HBRuntime* RUNTIME;
-
+static _Runtime* GetRuntime(){
+	
+	char* rtconfig = getenv("DETRT_CONFIG");
+	if(rtconfig == NULL){
+		WARNING_MSG("Not set env DETRT_CONFIG\n");
+	}
+	else if(strcmp(rtconfig, "Nondet") == 0){
+		size_t metadatsize = sizeof(PthreadRuntime) + PAGE_SIZE;
+		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+		if(mapped == (void*)-1){
+			DEBUG("Error: cannot allocate memory for meta data!\n");
+			_exit(1);
+		}
+		PthreadRuntime* rt = new (mapped) PthreadRuntime ();
+		return rt;	
+	}
+	else if(strcmp(rtconfig, "DMT") == 0){
+		size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
+		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+		if(mapped == (void*)-1){
+			DEBUG("Error: cannot allocate memory for meta data!\n");
+			_exit(1);
+		}
+		HBRuntime* rt = new (mapped) HBRuntime ();
+		return rt;	
+	}
+	else if(strcmp(rtconfig, "Record") == 0){
+		size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
+		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+		if(mapped == (void*)-1){
+			DEBUG("Error: cannot allocate memory for meta data!\n");
+			_exit(1);
+		}
+		HBRuntime* rt = new (mapped) HBRuntime ();
+		return rt;	
+	}
+	else if(strcmp(rtconfig, "Replay") == 0){
+		size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
+		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+		if(mapped == (void*)-1){
+			DEBUG("Error: cannot allocate memory for meta data!\n");
+			_exit(1);
+		}
+		HBRuntime* rt = new (mapped) HBRuntime ();
+		return rt;	
+	}
+	
+NotFoundEnv:
+	printf("Can not find the deterministic policy %s, using Nondet instead\n", rtconfig);
+	size_t metadatsize = sizeof(PthreadRuntime) + PAGE_SIZE;
+	void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	if(mapped == (void*)-1){
+		DEBUG("Error: cannot allocate memory for meta data!\n");
+		_exit(1);
+	}
+	_Runtime* rt = new (mapped) PthreadRuntime ();
+	return rt;	
+	//return NULL;
+}
 
 /**
  * _init{malloc, pthread_mutex_lock, etc}| ----> initialize(init real hook functions)| ------> main()
@@ -51,63 +107,19 @@ HBRuntime* RUNTIME;
  * However, initialize() is called before the main function of the program.
  */
 void initialize() {
-	NORMAL_MSG("HBDet: initialize...\n");
 	/*Init meta data.*/
-	size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
-	void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-	if(mapped == (void*)-1){
-		DEBUG("Error: cannot allocate memory for meta data!\n");
-		_exit(1);
-	}
-	//printf("metadatasize = %d\n", metadatsize);
-	//kernal_malloc = true;
-	RUNTIME = new (mapped) HBRuntime ();
-	DEBUG_MSG("Meta data heap from %x to %x\n", mapped, mapped + metadatsize);
-	
+	RUNTIME = GetRuntime();
 	RUNTIME->init();
-	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
-	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
-
-	DEBUG_MSG("HBDet: before initSnapshotMemory\n");
 
 	Util::start_time();
 	//ASSERT(initialized == true, "initialized = %d\n", initialized);
 	initialized = true;
-	DEBUG_MSG("HBDet: initializing finished!");
+	
 }
 
 
 void finalize() {
-#ifdef _PROFILING
-	NORMAL_MSG("Thread(%d) gc time: %lld\n", me->tid, me->gc_time);
-	NORMAL_MSG("Thread(%d) signal time: %lld\n", me->tid, me->signaltime);
-	NORMAL_MSG("Thread(%d) write log time: %lld\n", me->tid, me->writelogtime);
-	NORMAL_MSG("Thread(%d) read log time: %lld\n", me->tid, me->readlogtime);
-	NORMAL_MSG("Thread(%d) protect shared data time: %lld\n", me->tid, me->protecttime);
-	NORMAL_MSG("Thread(%d) rate of serial merge: %f.\n", me->tid, (double)me->serialcount/(me->paracount + me->serialcount));
-	printf("Total lock operation number: %d\n", metadata->lockcount);
-#endif
-
-	metadata->numpagefault += me->numpagefault;
-	//metadata->allocpages += me->myallocator.allocatedpages;
-	//metadata->memfootprint += Heap::appHeap()->getUsedMemory(me->tid);
-	metadata->gc_count += me->gc_count;
-	NORMAL_MSG("HBDet: finalize...\n");
-	uint64 etime = Util::watch_time();
-	NORMAL_MSG("HBDet: Program elapse time: %lld\n", etime);
-	NORMAL_MSG("HBDet: page fault number: %u\n", metadata->numpagefault / metadata->thread_slot);
-	NORMAL_MSG("HBDet: GC count: %d\n", metadata->gc_count);
-	NORMAL_MSG("HBDet: allocated pages = %llu\n", metadata->allocpages);
-	//printf("HBDet: max memory = %d\n", metadata->UsedMemory());
-	//printf("HBDet: shared memory usage = %llu\n", Heap::appHeap()->getUsedMemory() + GLOBALS_SIZE); old version
-	NORMAL_MSG("HBDet: shared memory usage = %llu\n", metadata->memfootprint + GLOBALS_SIZE);
-	NORMAL_MSG("HBDet: global memory = %llu\n", (uint64)GLOBALS_SIZE);
-	NORMAL_MSG("HBDet: total allocated memory = %llu\n", metadata->allocated_size);
-
-	//DiffLog::dumpSharedEntryList();
-	//int diffs = DiffLog::s_difflog->logDiffs();
-	//printf("HBDet: total diffs: %d\n", diffs);
-	//dumpPageMapInfo();
+	RUNTIME->finalize();
 }
 
 
@@ -137,12 +149,6 @@ void * malloc(size_t sz) {
 			_exit(1);
 		}
 	}
-//	else if(kernal_malloc){
-
-//		ptr = metadata->meta_alloc(sz);
-
-//		DEBUG_MSG("HBDet: kernal malloc: ptr = %x\n", ptr);
-//	}
 	else{
 		//WARNING_MSG("malloc, sz = %d\n", sz);
 		//ptr = Heap::getHeap()->malloc(sz);
@@ -166,13 +172,11 @@ void  free(void * addr)
 }
 
 void * valloc(size_t sz) {
-	//if(sz > 1024 * 1024)
-	//printf("valloc, sz = %d\n", sz);
 	void* ptr = NULL;
 	//printf("HBDet: malloc is not initialized!\n");
 	if (!initialized) {
 		//DEBUG("Pre-initialization malloc call forwarded to mmap");
-		printf("HBDet: malloc is not initialized!\n");
+		printf("malloc is not initialized!\n");
 		ptr = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 		if(ptr == (void *)-1)
 		{

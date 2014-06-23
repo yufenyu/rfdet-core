@@ -133,7 +133,6 @@ int Strategy::doPropagation(int from, vector_clock* old_time, vector_clock* new_
 	//return ret;
 }
 
-
 MProtectStrategy* MProtectStrategy::instance = NULL;
 MProtectStrategy::MProtectStrategy(){
 	rwPageNum = 0;
@@ -143,7 +142,7 @@ MProtectStrategy::MProtectStrategy(){
 
 int MProtectStrategy::endSlice(){
 	//RUNTIME::takeSnapshot();
-	if(RUNTIME->isSingleThreaded()){
+	if(GetHBRuntime()->isSingleThreaded()){
 		return 0;
 	}
 #ifdef _PROFILING

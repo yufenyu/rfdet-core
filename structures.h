@@ -98,7 +98,7 @@ public:
 };
 
 
-class InternalLockMap{
+class InternalLockMap {
 	map<void*, InternalLock*> lockMap;
 	int lock; /*shared*/
 public:
@@ -107,7 +107,9 @@ public:
 	InternalLockMap(){lock = 0; extlock = 0;}
 	InternalLock* FindOrCreateLock(void* mutex);
 	InternalLock* createMutex(void* mutex);
+	
 };
+
 
 /**
  * A thread can only wait for at most one conditional variable at a time.

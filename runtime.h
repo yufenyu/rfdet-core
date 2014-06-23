@@ -155,6 +155,7 @@ enum HappenBeforeReason{
 class _Runtime {
 	
 public:
+	virtual int finalize() = 0;
 	virtual int threadExit() = 0;
 	virtual int threadEntryPoint(void* args) = 0;
 	
@@ -184,6 +185,9 @@ public:
 class PthreadRuntime : public _Runtime {
 	
 	virtual void init();
+	virtual int finalize();
+	virtual int threadExit();
+	virtual int threadEntryPoint(void* args);
 	
 	virtual void * malloc(size_t sz);
 	virtual void  free(void * addr);
@@ -253,6 +257,7 @@ public:
 
 public:
 	
+	virtual int finalize();
 	virtual int threadExit();
 	virtual int threadEntryPoint(void* args);
 	
@@ -326,9 +331,12 @@ public:
 	
 };
 
-extern HBRuntime* RUNTIME;
-
-
+extern _Runtime* RUNTIME;
+inline HBRuntime* GetHBRuntime(){
+	HBRuntime* rt = dynamic_cast<HBRuntime*>(RUNTIME);
+	ASSERT(rt != NULL, "RUNTIME is not HBRuntime")
+	return rt;
+}
 
 
 

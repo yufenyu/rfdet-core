@@ -81,10 +81,11 @@ InternalLock* InternalLockMap::createMutex(void* mutex){
 	void* ptr = metadata->meta_alloc(sizeof(InternalLock));
 	InternalLock* m = new (ptr) InternalLock(mutex);
 	//kernal_malloc = true;
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
+	
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
 	lockMap[mutex] = m;
 	//kernal_malloc = false;
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(false);
 	return m;
 }
 
@@ -101,7 +102,7 @@ InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
 	//printf("FindOrCreateLock: enter critical section\n");
 	map <void*, InternalLock*> :: const_iterator iter;
 	//kernal_malloc = true;
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
 	//SPINLOCK_LOCK(&lock);
 	InternalLock* m = lockMap[mutex];
 	//InternalLock* m = lockMap.at(mutex);
@@ -123,7 +124,7 @@ InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
 		SPINLOCK_UNLOCK(&lock);
 	}
 	//kernal_malloc = false;
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(false);
 	//SPINLOCK_UNLOCK(&lock);
 	return m;
 }
@@ -132,9 +133,9 @@ InternalCond* InternalCondsMap::createCond(void* cond){
 	void* ptr = metadata->meta_alloc(sizeof(InternalLock));
 	InternalCond* c = new (ptr) InternalCond(cond);
 
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
 	condsMap[cond] = c;
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(false);
 	return c;
 }
 
@@ -142,7 +143,7 @@ InternalCond* InternalCondsMap::findOrCreateCond(void* cond){
 	ASSERT(cond != NULL, "")
 	//SPINLOCK_LOCK(&lock);
 	
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
 	InternalCond* c = condsMap[cond];
 	if(c == NULL) {
 		WARNING_MSG("Using conditional variable(%x) without initialize it\n", cond);
@@ -158,14 +159,14 @@ InternalCond* InternalCondsMap::findOrCreateCond(void* cond){
 	}
 	//SPINLOCK_UNLOCK(&lock);
 	
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(false);
 	return c;
 }
 
 AdhocSync* AdhocSyncMap::findOrCreateAdhoc(void* sync){
 	SPINLOCK_LOCK(&lock);
 
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(true);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
 	AdhocSync* isync = adhocMap[sync];
 	if(isync == NULL) {
 		void* ptr = metadata->meta_alloc(sizeof(AdhocSync));
@@ -174,7 +175,7 @@ AdhocSync* AdhocSyncMap::findOrCreateAdhoc(void* sync){
 	}
 	SPINLOCK_UNLOCK(&lock);
 
-	RUNTIME->getThreadPrivate()->SetKernalMalloc(false);
+	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(false);
 	return isync;
 }
 
@@ -214,6 +215,39 @@ HBRuntime::HBRuntime(){
 	this->tpdata = &threadprivatedata;
 	metadata = &_metadata;
 	strategy = tpdata->getStrategy();
+}
+
+int HBRuntime::finalize(){
+#ifdef _PROFILING
+	NORMAL_MSG("Thread(%d) gc time: %lld\n", me->tid, me->gc_time);
+	NORMAL_MSG("Thread(%d) signal time: %lld\n", me->tid, me->signaltime);
+	NORMAL_MSG("Thread(%d) write log time: %lld\n", me->tid, me->writelogtime);
+	NORMAL_MSG("Thread(%d) read log time: %lld\n", me->tid, me->readlogtime);
+	NORMAL_MSG("Thread(%d) protect shared data time: %lld\n", me->tid, me->protecttime);
+	NORMAL_MSG("Thread(%d) rate of serial merge: %f.\n", me->tid, (double)me->serialcount/(me->paracount + me->serialcount));
+	printf("Total lock operation number: %d\n", metadata->lockcount);
+#endif
+
+	metadata->numpagefault += me->numpagefault;
+	//metadata->allocpages += me->myallocator.allocatedpages;
+	//metadata->memfootprint += Heap::appHeap()->getUsedMemory(me->tid);
+	metadata->gc_count += me->gc_count;
+	NORMAL_MSG("HBDet: finalize...\n");
+	uint64 etime = Util::watch_time();
+	NORMAL_MSG("HBDet: Program elapse time: %lld\n", etime);
+	NORMAL_MSG("HBDet: page fault number: %u\n", metadata->numpagefault / metadata->thread_slot);
+	NORMAL_MSG("HBDet: GC count: %d\n", metadata->gc_count);
+	NORMAL_MSG("HBDet: allocated pages = %llu\n", metadata->allocpages);
+	//printf("HBDet: max memory = %d\n", metadata->UsedMemory());
+	//printf("HBDet: shared memory usage = %llu\n", Heap::appHeap()->getUsedMemory() + GLOBALS_SIZE); old version
+	NORMAL_MSG("HBDet: shared memory usage = %llu\n", metadata->memfootprint + GLOBALS_SIZE);
+	NORMAL_MSG("HBDet: global memory = %llu\n", (uint64)GLOBALS_SIZE);
+	NORMAL_MSG("HBDet: total allocated memory = %llu\n", metadata->allocated_size);
+
+	//DiffLog::dumpSharedEntryList();
+	//int diffs = DiffLog::s_difflog->logDiffs();
+	//printf("HBDet: total diffs: %d\n", diffs);
+	//dumpPageMapInfo();
 }
 
 int HBRuntime::threadExit(){
@@ -282,7 +316,7 @@ int HBRuntime::threadEntryPoint(void* args){
 	sleep(20);
 #endif
 
-	RUNTIME->protectSharedData();
+	GetHBRuntime()->protectSharedData();
 	DEBUG_MSG("Thread(%d) start: pid = %d\n", me->tid, me->pid);
 	void* res = thread->start_routine(thread->args);
 	DEBUG_MSG("Thread(%d) end function:\n", me->tid);
@@ -342,7 +376,7 @@ int HBRuntime::unprotectSharedData(){
 }
 
 bool IsSingleThread(){
-	return RUNTIME->isSingleThreaded();
+	return GetHBRuntime()->isSingleThreaded();
 }
 
 bool HBRuntime::isSingleThreaded(){
@@ -1258,6 +1292,8 @@ void HBRuntime::init(){
 	DEBUG_MSG("HBDet: before init_mainthread\n");
 	init_mainthread();
 	
+	//std::cout << "Linux Page Size = " << getpagesize() << std::endl;
+	ASSERT(PAGE_SIZE == getpagesize() && PAGE_SIZE == sysconf(_SC_PAGESIZE), "Page size configuration error!")
 	//metadata = this->getMetadata();
 }
 
@@ -1277,9 +1313,24 @@ bool RuntimeStatus::IsSingleThread(){
 
 	
 void PthreadRuntime::init(){
+	std::cout << "Nondeterministic run start..." << std::endl;
 	init_real_functions();
+	
 }
 	
+int PthreadRuntime::finalize(){
+	std::cout << "Nondeterministic run finished!" << std::endl;
+	return 0;
+}
+
+int PthreadRuntime::threadExit(){
+	
+}
+
+int PthreadRuntime::threadEntryPoint(void* args){
+	
+}
+
 void * PthreadRuntime::malloc(size_t sz){
 	return real_malloc(sz);
 }

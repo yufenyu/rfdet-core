@@ -29,13 +29,13 @@ class Strategy {
 public:
 	Strategy();
 	virtual ~Strategy();
-	static int beginSlice();
-	static int endSlice();
-	static int prepropagation();
+	int beginSlice();
+	int endSlice();
+	int prepropagation();
 public:
-	static int mergeSlice(Slice* s);
-	static int deliver(int from, vector_clock* old_time, vector_clock* new_time, int type); //deliver modifications.
-	static int doPropagation(int from, vector_clock* old_time, vector_clock* new_time, int type);
+	int mergeSlice(Slice* s);
+	int deliver(int from, vector_clock* old_time, vector_clock* new_time, int type); //deliver modifications.
+	int doPropagation(int from, vector_clock* old_time, vector_clock* new_time, int type);
 
 };
 
