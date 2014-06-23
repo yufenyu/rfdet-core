@@ -6,7 +6,7 @@
  */
 
 #include "modification.h"
-#include "runtime.h"
+#include "detruntime.h"
 
 DiffModification::DiffModification() {
 	// TODO Auto-generated constructor stub

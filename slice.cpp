@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#include "runtime.h"
+#include "detruntime.h"
 
 
 int SliceManager::initOnThreadEntry(){

@@ -12,7 +12,7 @@
 //#include "kendo.h"
 #include "structures.h"
 #include "utils.h"
-#include "runtime.h"
+#include "detruntime.h"
 
 DetSync::DetSync() {
 	// TODO Auto-generated constructor stub

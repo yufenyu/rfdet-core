@@ -23,6 +23,8 @@
 #include "common.h"
 #include "strategy.h"
 #include "runtime.h"
+#include "detruntime.h"
+
 
 #if defined(__GNUG__)
 void initialize() __attribute__((constructor));
@@ -32,7 +34,7 @@ void finalize() __attribute__((destructor));
 
 ////////////////////////////Global Variables/////////////////////////////
 
-InternalLockMap* internal_locks;
+//InternalLockMap* internal_locks;
 thread_info_t * me;
 static bool initialized = false;
 _Runtime* RUNTIME;

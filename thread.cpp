@@ -8,7 +8,7 @@
 #include "slice.h"
 #include "thread.h"
 #include "structures.h"
-#include "runtime.h"
+#include "detruntime.h"
 
 
 /*These operations should be thread safe.*/

@@ -18,7 +18,7 @@
 
 #include "strategy.h"
 #include "defines.h"
-#include "runtime.h"
+#include "detruntime.h"
 #include "writeset.h"
 
 
