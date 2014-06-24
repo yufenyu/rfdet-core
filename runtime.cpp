@@ -37,13 +37,15 @@ char* _Runtime::getAppname(){
 
 	
 void PthreadRuntime::init(){
-	std::cout << "Nondeterministic run start..." << std::endl;
+	std::cout << "Running program " << this->getAppname() << " with pthreads..." << std::endl;
 	init_real_functions();
 	
 }
 	
 int PthreadRuntime::finalize(){
-	std::cout << "Nondeterministic run finished!" << std::endl;
+	uint64_t elapsetime = Util::watch_time();
+	std::cout << "Program " << this->getAppname() << 
+					" with pthreads, elapse time: " << elapsetime << std::endl;
 	return 0;
 }
 

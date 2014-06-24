@@ -1120,7 +1120,7 @@ void RRRuntime::printResult(){
 }
 
 void RRRuntime::printWelcomeMsg(){
-	std::string mode = NULL;
+	std::string mode;
 	if(this->IsRecording()){
 		mode = "Recording...";
 	}
