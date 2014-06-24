@@ -12,7 +12,7 @@ CFLAGS=-c -O3 -fPIC -g -I ./Heap-Layers-master -DNDEBUG -std=c++0x ${USING_GDB}
 LDFLAGS=-ldl -lpthread -O3
 
 #SRC=globals.cpp signal.cpp difflog.cpp runtime.cpp heaps.cpp vecotrclock.cpp hook.cpp simpleheap.cpp globalprivate.cpp
-OBJS=hbdet.o globals.o slice.o runtime.o heaps.o hook.o modification.o
+OBJS=hbdet.o slice.o runtime.o heaps.o hook.o modification.o
 OBJS+=thread.o writeset.o detsync.o strategy.o detruntime.o
 #HEADERS=utils.h runtime.h defines.h vectorclock.h hook.h simpleheap.h globalprivate.h
 
