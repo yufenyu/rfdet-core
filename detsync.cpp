@@ -32,7 +32,7 @@ int NondetSyncPolicy::unlock(InternalLock* lock){
 }
 
 int RRSyncPolicy::lock(InternalLock* l){
-	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	_Runtime& rt = *RUNTIME;
 	if(rt.IsRecording()){
 		return recordLock(l);
 	}
@@ -44,7 +44,7 @@ int RRSyncPolicy::lock(InternalLock* l){
 }
 
 int RRSyncPolicy::trylock(InternalLock* l){
-	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	_Runtime& rt = *RUNTIME;
 	if(rt.IsRecording()){
 		return recordTrylock(l);
 	}
@@ -56,7 +56,7 @@ int RRSyncPolicy::trylock(InternalLock* l){
 }
 
 int RRSyncPolicy::unlock(InternalLock* l){
-	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	_Runtime& rt = *RUNTIME;
 	if(rt.IsRecording()){
 		return recordUnlock(l);
 	}
@@ -191,7 +191,7 @@ FILE* RRSyncPolicy::getLogFile(int tid){
 	std::stringstream ss;
 	ss << logfile << tid;
 	std::string logfilename = ss.str();
-	RuntimeStatus& rt = metadata->getRuntimeStatus();
+	_Runtime& rt = *RUNTIME;
 	const char* mode = rt.IsRecording() ? "w" : "r";
 	if(fds[tid] == NULL){
 		//std::cerr << "Open log file " << logfilename << std::endl;

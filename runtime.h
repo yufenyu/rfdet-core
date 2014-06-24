@@ -39,10 +39,37 @@ enum HappenBeforeReason{
 	HB_REASON_JOIN,
 	HB_REASON_CREATE
 };
+enum RuningMode{
+	Mode_DMT,
+	Mode_Record,
+	Mode_Replay,
+	Mode_RaceFree,
+	Mode_Pthreads
+};
+
 
 class _Runtime {
+private:
+	int runningmode;
 	
 public:
+	inline void setRunningMode(int mode){
+		runningmode = mode;
+	}
+	
+	bool IsRecording(){
+		return runningmode == Mode_Record;
+	}
+	bool IsReplaying(){
+		return runningmode == Mode_Replay;
+	}
+	bool IsDMT(){
+		return runningmode == Mode_DMT;
+	}
+	char* getAppname();
+	
+public: //Interface methods:
+	
 	virtual int finalize() = 0;
 	virtual int threadExit() = 0;
 	virtual int threadEntryPoint(void* args) = 0;
@@ -71,7 +98,11 @@ public:
 };
 
 class PthreadRuntime : public _Runtime {
-	
+public:
+	PthreadRuntime(){
+		this->setRunningMode(Mode_Pthreads);
+	}
+public:
 	virtual void init();
 	virtual int finalize();
 	virtual int threadExit();
@@ -99,8 +130,6 @@ class PthreadRuntime : public _Runtime {
 	virtual int barrier_wait(pthread_barrier_t* barrier);
 	
 };
-
-
 
 extern _Runtime* RUNTIME;
 

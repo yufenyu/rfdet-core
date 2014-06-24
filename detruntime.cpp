@@ -34,7 +34,6 @@ RuntimeDataMemory::RuntimeDataMemory(){
 		allocated_size = 0;
 		gc_count = 0;
 		lockcount = 0;
-		runtimestatus.setRunningMode(Mode_DMT);
 }
 
 
@@ -69,7 +68,7 @@ InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
 	//InternalLock* m = NULL;
 	//iter = lockMap.find(mutex);
 	if(m == NULL) {
-		WARNING_MSG("Warning: using lock(%x) without initializing it.\n", mutex);
+		WARNING_MSG("Warning: using lock(%p) without initializing it.\n", mutex);
 		//exit(0);
 		SPINLOCK_LOCK(&lock);
 		m = lockMap[mutex];
@@ -106,7 +105,7 @@ InternalCond* InternalCondsMap::findOrCreateCond(void* cond){
 	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
 	InternalCond* c = condsMap[cond];
 	if(c == NULL) {
-		WARNING_MSG("Using conditional variable(%x) without initialize it\n", cond);
+		WARNING_MSG("Using conditional variable(%p) without initialize it\n", cond);
 		//exit(0);
 		SPINLOCK_LOCK(&lock);
 		c = condsMap[cond];
@@ -154,7 +153,7 @@ int getThreadNum(){
 ThreadPrivateData threadprivatedata;
 
 HBRuntime::HBRuntime(){
-	fprintf(stderr, "Running with DMT...\n");
+	this->setRunningMode(Mode_RaceFree);
 	this->tpdata = &threadprivatedata;
 	metadata = &_metadata;
 	strategy = tpdata->getStrategy();
@@ -172,8 +171,10 @@ void HBRuntime::initConstants(void* heap_low){
 }
 #endif
 
-int HBRuntime::finalize(){
-	this->threadExit();
+void HBRuntime::printResult(){
+	uint64_t elapsetime = Util::watch_time();
+	std::cout << "Program elapse time: " << elapsetime << std::endl;
+	
 #ifdef _PROFILING
 	NORMAL_MSG("Thread(%d) gc time: %lld\n", me->tid, me->gc_time);
 	NORMAL_MSG("Thread(%d) signal time: %lld\n", me->tid, me->signaltime);
@@ -199,7 +200,15 @@ int HBRuntime::finalize(){
 	NORMAL_MSG("HBDet: shared memory usage = %llu\n", metadata->memfootprint + GLOBALS_SIZE);
 	NORMAL_MSG("HBDet: global memory = %llu\n", (uint64)GLOBALS_SIZE);
 	NORMAL_MSG("HBDet: total allocated memory = %llu\n", metadata->allocated_size);
+}
 
+void HBRuntime::printWelcomeMsg(){
+	std::cout << "Running program " << this->getAppname() << " with RaceFree...\n" << std::endl;
+}
+
+int HBRuntime::finalize(){
+	this->threadExit();
+	this->printResult();
 }
 
 int HBRuntime::threadExit(){
@@ -229,15 +238,15 @@ int HBRuntime::threadExit(){
 
 	me->finished = true;
 	//reallocate_thread();
-	WARNING_MSG("Thread %d leaving\n", me->tid);
+	NORMAL_MSG("Thread %d leaving\n", me->tid);
 	
 	return 0;	
 }
 
 int HBRuntime::threadEntryPoint(void* args){
-	NORMAL_MSG("thread_entry_point: args = %x\n", args);
+	NORMAL_MSG("thread_entry_point: args = %p\n", args);
 	thread_info_t* thread = (thread_info_t*)args;
-	DEBUG_MSG("Enter thread_entry_point, start_routine = %x\n", thread->start_routine);
+	DEBUG_MSG("Enter thread_entry_point, start_routine = %p\n", thread->start_routine);
 
 	me = thread;
 	me->init();
@@ -642,13 +651,13 @@ int clearThreadStructures(int tid){
 /*@Done: add a 'pid' field in thread struct.*/
 int HBRuntime::threadJoin(pthread_t tid, void ** val){
 	int status;
-	WARNING_MSG("Thread %d join thread %d\n", me->tid, tid);
+	NORMAL_MSG("Thread %d join thread %d\n", me->tid, tid);
 
 
 	pid_t pid = metadata->threads[tid].pid;
 	pid_t child = waitpid(pid, &status, 0);
 
-	WARNING_MSG("Thread %d join thread %d\n", me->tid, tid);
+	NORMAL_MSG("Thread %d join thread %d\n", me->tid, tid);
 
 	/**
 	 * TODO: we could merge the logs that are before join and after join. Hence, we do not need to
@@ -1060,6 +1069,8 @@ bool HBRuntime::isInGlobals(void* addr){
 
 
 void HBRuntime::init(){
+	this->printWelcomeMsg();
+	
 	strategy->init();
 	Heap* heap = Heap::getHeap();
 	//void* heap = (void*)getHeap();
@@ -1081,13 +1092,12 @@ void HBRuntime::init(){
 	//metadata = this->getMetadata();
 	
 	syncpolicy = createSyncPolicy();
+	
 }
 
 RRRuntime::RRRuntime(std::string file, int mode) : logfile (file){
 	//std::cerr << "Running with Record&Replay System" << std::endl;
-	
-	metadata->getRuntimeStatus().setRunningMode(mode);
-	//this->setSyncPolicy(getSyncPolicy());
+	this->setRunningMode(mode);
 }
 
 SyncPolicy* RRRuntime::createSyncPolicy(){
@@ -1102,9 +1112,25 @@ int RRRuntime::threadExit(){
 	SyncPolicy* sp = this->getSyncPolicy();
 	RRSyncPolicy* rrsp = dynamic_cast<RRSyncPolicy*>(sp);
 	rrsp->closeLogFile(me->tid);
-	
+}
+
+void RRRuntime::printResult(){
+	uint64_t elapsetime = Util::watch_time();
+	std::cout << "Program elapse time: " << elapsetime << std::endl;
+}
+
+void RRRuntime::printWelcomeMsg(){
+	std::string mode = NULL;
+	if(this->IsRecording()){
+		mode = "Recording...";
+	}
+	else if(this->IsReplaying()){
+		mode = "Replaying...";
+	}
+	std::cout << "Running program " << 
+				this->getAppname() << " with " << mode << std::endl;
 }
 
 DMTRuntime::DMTRuntime(){
-	
+	this->setRunningMode(Mode_DMT);
 }

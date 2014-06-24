@@ -38,52 +38,9 @@ using namespace std;
 /**
  * External functions exported by hb_globals.cpp
  */
-int init_globals();
-int protect_globals();
-int unprotect_globals();
-void add_global_data(void* ptr, size_t length);
-bool is_in_globals(void* addr);
 
 
-int init_globalprivate();
 
-void * alloc_global_private(int size);
-
-struct global_private_meta_data{
-	void * start;
-	void * last;
-};
-
-enum RuningMode{
-	Mode_DMT,
-	Mode_Record,
-	Mode_Replay,
-	Mode_RaceFree,
-	Mode_Pthreads
-};
-
-class RuntimeStatus{
-private:
-	int runningmode;
-public:
-	RuntimeStatus(){
-		runningmode = Mode_DMT;
-	}
-	inline void setRunningMode(int mode){
-		runningmode = mode;
-	}
-	int CurrThreadID();
-	bool IsSingleThread();
-	bool IsRecording(){
-		return runningmode == Mode_Record;
-	}
-	bool IsReplaying(){
-		return runningmode == Mode_Replay;
-	}
-	bool IsDMT(){
-		return runningmode == Mode_DMT;
-	}
-};
 
 int CurrThreadID();
 bool IsSingleThread();

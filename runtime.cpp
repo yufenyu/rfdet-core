@@ -30,16 +30,10 @@
 uint64 Util::timekeeper = 0;
 uint64 Util::starttime = 0;
 
-
-int RuntimeStatus::CurrThreadID(){
-	ASSERT(false, "Not implemented.")
-	return 0;
+extern char *program_invocation_short_name;
+char* _Runtime::getAppname(){
+	return program_invocation_short_name;
 }
-bool RuntimeStatus::IsSingleThread(){
-	ASSERT(false, "Not implemented.")
-	return false;
-}
-
 
 	
 void PthreadRuntime::init(){

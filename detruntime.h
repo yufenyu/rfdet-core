@@ -37,7 +37,7 @@ public:
 	uint32_t gc_count;
 	uint32_t lockcount;
 	
-	RuntimeStatus runtimestatus;
+	//RuntimeStatus runtimestatus;
 	/**/
 	KernalSpace kernaldata;
 	MemModSpace modstore; /*Storage for memory modifications in the metadata space*/
@@ -97,9 +97,6 @@ public:
 		return modstore.used() + kernaldata.used();
 	}
 	
-	inline RuntimeStatus& getRuntimeStatus(){
-		return runtimestatus;
-	}
 };
 
 extern RuntimeDataMemory *metadata;
@@ -141,6 +138,8 @@ private:
 	
 protected:
 	virtual SyncPolicy* createSyncPolicy();
+	virtual void printResult();
+	virtual void printWelcomeMsg();
 	
 public:
 	inline SyncPolicy* getSyncPolicy(){
@@ -250,6 +249,13 @@ inline HBRuntime* GetHBRuntime(){
 class DMTRuntime : public HBRuntime {
 public:
 	DMTRuntime();
+protected:
+	virtual void printResult(){
+		std::cout << "Program elapse time: " << std::endl;
+	}
+	virtual void printWelcomeMsg(){
+		std::cout << "Running program " << this->getAppname() << " with DMT" << std::endl;
+	}
 };
 
 class RRRuntime : public HBRuntime {
@@ -257,11 +263,15 @@ class RRRuntime : public HBRuntime {
 	
 protected:
 	virtual SyncPolicy* createSyncPolicy();
+	virtual void printResult();
+	virtual void printWelcomeMsg();
 	
 public:
 	
 	RRRuntime(std::string file, int mode);
-	virtual int threadExit(); 
+	virtual int threadExit();
+	//virtual void init();
+	//virtual int finalize();
 };
 
 #endif /*DMTRUNTIME_H_*/
