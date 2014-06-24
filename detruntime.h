@@ -46,7 +46,7 @@ public:
 	/**
 	 * All fields should be added before free. TODO: alignment!
 	 */
-	meta_free_space free; /*Depreciated*/
+	char* free; /*Depreciated*/
 
 	void* meta_alloc(size_t size){
 		Util::spinlock(&lock);
@@ -104,6 +104,21 @@ public:
 
 extern RuntimeDataMemory *metadata;
 
+class ThreadPrivateData{
+	bool kernal_malloc;
+	MProtectStrategy strategy;
+public:
+	ThreadPrivateData() : kernal_malloc(false){}
+	inline bool IsKernalMalloc(){
+		return kernal_malloc;
+	}
+	inline bool SetKernalMalloc(bool b){
+		kernal_malloc = b;
+	}
+	inline MProtectStrategy* getStrategy(){
+		return &strategy;
+	}
+};
 
 class HBRuntime : public _Runtime{
 	RuntimeDataMemory _metadata;
@@ -119,6 +134,10 @@ private:
 	int rawMutexUnlock(pthread_mutex_t * mutex, bool usercall);
 	//static int paraLockWait(InternalLock* lock, bool is_happen_before, vector_clock* old_time, int old_owner) __attribute__ ((deprecated));
 	bool gcpoll();
+	int findTid();
+	void initConstants(void* heap_low);
+	int protectGlobals();
+	int unprotectGlobals();
 	
 protected:
 	virtual SyncPolicy* createSyncPolicy();
@@ -166,9 +185,6 @@ public:
 	int publishLog(Slice* log);
 	//static int fetchModify(int from, int to, vector_clock* old_time, vector_clock* curr_time);
 	int prefetchModify(int from, int to, vector_clock* old_time, vector_clock* curr_time);
-	//static int mergeLog(Slice* flog);
-	//static int register_adhoc(void* cond);
-	
 	
 	int barrierImpl(int tnum);
 

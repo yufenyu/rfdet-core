@@ -22,19 +22,7 @@
 #include "defines.h"
 #include "strategy.h"
 
-typedef struct _LockItem{
-	int tid;
-	int next;
-} LockItem;
 
-//extern InternalLockMap* internal_locks;
-
-
-typedef struct _meta_free_space {
-	int index;
-	int limit;
-	int __start;
-} meta_free_space;
 
 
 #define META_CHUNK_SIZE (1024 * 1024 * 4) //4MB
@@ -44,9 +32,6 @@ typedef struct _meta_free_space {
 
 extern thread_info_t * me;
 
-void init_mainthread();
-//void* thread_entry_point(void* args);
-
 enum HappenBeforeReason{
 	HB_REASON_LOCK,
 	HB_REASON_UNLOCK,
@@ -54,6 +39,7 @@ enum HappenBeforeReason{
 	HB_REASON_JOIN,
 	HB_REASON_CREATE
 };
+
 class _Runtime {
 	
 public:
@@ -114,21 +100,6 @@ class PthreadRuntime : public _Runtime {
 	
 };
 
-class ThreadPrivateData{
-	bool kernal_malloc;
-	MProtectStrategy strategy;
-public:
-	ThreadPrivateData() : kernal_malloc(false){}
-	inline bool IsKernalMalloc(){
-		return kernal_malloc;
-	}
-	inline bool SetKernalMalloc(bool b){
-		kernal_malloc = b;
-	}
-	inline MProtectStrategy* getStrategy(){
-		return &strategy;
-	}
-};
 
 
 extern _Runtime* RUNTIME;

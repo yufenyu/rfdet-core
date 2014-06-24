@@ -179,7 +179,7 @@ void RRSyncPolicy::closeLogFile(int tid){
 	FILE* file = fds[tid];
 	ASSERT(file != NULL, "file = NULL");
 	long pos = ftell(file);
-	std::cerr << "Current position for thread " << tid << " : " << pos << std::endl;
+	//std::cerr << "Current position for thread " << tid << " : " << pos << std::endl;
 	fseek(file, 0L, SEEK_END);
 	long size = ftell(file);
 	ASSERT(pos == size, "Replay does not seem match Record\n");
@@ -194,7 +194,7 @@ FILE* RRSyncPolicy::getLogFile(int tid){
 	RuntimeStatus& rt = metadata->getRuntimeStatus();
 	const char* mode = rt.IsRecording() ? "w" : "r";
 	if(fds[tid] == NULL){
-		std::cerr << "Open log file " << logfilename << std::endl;
+		//std::cerr << "Open log file " << logfilename << std::endl;
 		fds[tid] = fopen(logfilename.c_str(), mode);
 		ASSERT(fds[tid] != NULL, "open log file(%s) failed!", logfilename.c_str());
 	}
