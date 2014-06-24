@@ -4,6 +4,14 @@
 #include "runtime.h"
 #include "detsync.h"
 
+enum HappenBeforeReason{
+	HB_REASON_LOCK,
+	HB_REASON_UNLOCK,
+	HB_REASON_CONDWAIT,
+	HB_REASON_JOIN,
+	HB_REASON_CREATE
+};
+
 class MemModSpace : public PageSizeMemory<METADATA_MMP_SPACE_SIZE, META_CHUNK_SIZE, MAX_THREAD_NUM> {};
 class KernalSpace : public ImmutableMemory<META_KERNAL_SPACE_SIZE> {};
 

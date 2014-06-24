@@ -32,13 +32,6 @@
 
 extern thread_info_t * me;
 
-enum HappenBeforeReason{
-	HB_REASON_LOCK,
-	HB_REASON_UNLOCK,
-	HB_REASON_CONDWAIT,
-	HB_REASON_JOIN,
-	HB_REASON_CREATE
-};
 enum RuningMode{
 	Mode_DMT,
 	Mode_Record,

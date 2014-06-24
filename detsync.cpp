@@ -148,7 +148,7 @@ void RRSyncPolicy::writeLog(int tid, uint64_t locknum, uint64_t version, uint32_
 	log.version = version;
 	log.failednum = failednum;
 	size_t ret = fwrite(&log, sizeof(log), 1, file);
-	ASSERT(ret == 1, "Write log failed, write %d bytes\n", ret);
+	ASSERT(ret == 1, "Write log failed, write %zu bytes\n", ret);
 }
 
 
@@ -167,7 +167,7 @@ void RRSyncPolicy::waitStatus(ReplayLog& log, InternalLock* lock){
 		Util::wait_for_a_while();
 	}
 	ASSERT(lock->getVersion() == log.version, 
-			"Version incorrect: %ul vs %ul\n", lock->getVersion(), log.version);
+			"Version incorrect: %lu vs %lu\n", lock->getVersion(), log.version);
 }
 
 

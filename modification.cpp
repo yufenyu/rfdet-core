@@ -28,8 +28,8 @@ int DiffModification::record(AddressMap* ws){
 		address_t pageaddr = ws->getDirtyPage(i);
 		AddressPage* page = (AddressPage*)ws->getDirtyPageSnapshot(i);
 		
-		DEBUG_MSG("Thread %d: record page addr = %d\n", me->tid, pageaddr);
-		ASSERT(page != NULL, "tid = %d, pageaddr = %x, tpage = %p\n", me->tid, pageaddr, page)
+		DEBUG_MSG("Thread %d: record page addr = %p\n", me->tid, (void*)pageaddr);
+		ASSERT(page != NULL, "tid = %d, pageaddr = %p, tpage = %p\n", me->tid, (void*)pageaddr, page)
 		
 		calcPageDiffs(page, (void*)pageaddr);
 		metadata->freePage(page);
