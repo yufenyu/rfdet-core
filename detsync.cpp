@@ -172,12 +172,19 @@ void RRSyncPolicy::waitStatus(ReplayLog& log, InternalLock* lock){
 
 
 void RRSyncPolicy::moveToNextLog(){
+	
 }
 
 void RRSyncPolicy::closeLogFile(int tid){
 	FILE* file = fds[tid];
 	ASSERT(file != NULL, "file = NULL");
+	long pos = ftell(file);
+	std::cerr << "Current position for thread " << tid << " : " << pos << std::endl;
+	fseek(file, 0L, SEEK_END);
+	long size = ftell(file);
+	ASSERT(pos == size, "Replay does not seem match Record\n");
 	fclose(fds[tid]);
+	
 }
 
 FILE* RRSyncPolicy::getLogFile(int tid){

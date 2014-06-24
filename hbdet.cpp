@@ -54,7 +54,6 @@ static _Runtime* GetRuntime(){
 	//fprintf(stderr, "App name: %s\n", program_invocation_name);
 	fprintf(stderr, "App short name: %s\n", program_invocation_short_name);
 
-	
 	std::stringstream ss;
 	char* logpath = getenv("DETRT_CONFIG_LOGPATH");
 	if(logpath != NULL){
@@ -64,7 +63,7 @@ static _Runtime* GetRuntime(){
 	std::string dir = ss.str();
 	fprintf(stderr, "Log Dir: %s\n", dir.c_str());
 	if(NULL == opendir(dir.c_str())){
-	   mkdir(dir.c_str(), 0775);
+		mkdir(dir.c_str(), 0775);
 	}
 	
 	ss << program_invocation_short_name;

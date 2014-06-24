@@ -168,6 +168,7 @@ HBRuntime::HBRuntime(){
 
 
 int HBRuntime::finalize(){
+	this->threadExit();
 #ifdef _PROFILING
 	NORMAL_MSG("Thread(%d) gc time: %lld\n", me->tid, me->gc_time);
 	NORMAL_MSG("Thread(%d) signal time: %lld\n", me->tid, me->signaltime);
@@ -234,6 +235,7 @@ int HBRuntime::threadExit(){
 	//if(me->tid == 1){
 		//while(1){}
 	//}
+	
 	return 0;	
 }
 
@@ -1292,6 +1294,7 @@ int RRRuntime::threadExit(){
 	SyncPolicy* sp = this->getSyncPolicy();
 	RRSyncPolicy* rrsp = dynamic_cast<RRSyncPolicy*>(sp);
 	rrsp->closeLogFile(me->tid);
+	
 }
 
 DMTRuntime::DMTRuntime(){
