@@ -18,12 +18,3 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "common.h"
-
-
-
-
-
-
-/*TODO: the for iteration seems to be useless.*/
-

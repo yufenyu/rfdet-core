@@ -161,14 +161,16 @@ HBRuntime::HBRuntime(){
 	//this->syncpolicy = getSyncPolicy();
 }
 
-void* shared_data_low;
+#ifdef UNUSED
+void* shared_data_low_not_used;
 void HBRuntime::initConstants(void* heap_low){
-	shared_data_low = (void*)GLOBALS_START;
+	shared_data_low_not_used = (void*)GLOBALS_START;
 	DEBUG_MSG("GLOBALS_START = %x\n", (void*)GLOBALS_START);
-	if(shared_data_low > heap_low){
-		shared_data_low = heap_low;
+	if(shared_data_low_not_used > heap_low){
+		shared_data_low_not_used = heap_low;
 	}
 }
+#endif
 
 int HBRuntime::finalize(){
 	this->threadExit();
@@ -260,7 +262,7 @@ int HBRuntime::threadEntryPoint(void* args){
 	sleep(20);
 #endif
 
-	GetHBRuntime()->protectSharedData();
+	this->protectSharedData();
 	DEBUG_MSG("Thread(%d) start: pid = %d\n", me->tid, me->pid);
 	void* res = thread->start_routine(thread->args);
 	DEBUG_MSG("Thread(%d) end function:\n", me->tid);
@@ -372,8 +374,6 @@ int HBRuntime::GC(){
 int HBRuntime::clearGC(){
 	me->slices.freeAllSlices();
 }
-
-
 
 
 extern int signal_up; //debugging variable
@@ -1069,7 +1069,7 @@ void HBRuntime::init(){
 	}
 	DEBUG_MSG("Heap Init OK...\n");
 
-	initConstants(heap->start());
+	//initConstants(heap->start());
 	DEBUG_MSG("HBDet: before init_real_functions\n");
 	init_real_functions();
 	

@@ -135,7 +135,7 @@ private:
 	//static int paraLockWait(InternalLock* lock, bool is_happen_before, vector_clock* old_time, int old_owner) __attribute__ ((deprecated));
 	bool gcpoll();
 	int findTid();
-	void initConstants(void* heap_low);
+	//void initConstants(void* heap_low);
 	int protectGlobals();
 	int unprotectGlobals();
 	
