@@ -23,48 +23,13 @@ int InternalLock::push_owner(int tid){
 			freeslot = 0;
 		}
 		return threads[pre];
-		/*
-		//printf("Thread %d push owner %d\n", thread->tid, thread->tid);
-		Util::syncbarrier();
-		thread_info_t* ret = waitlist_tail;
-		if(waitlist_head == NULL){
-			waitlist_head = thread;
-			waitlist_tail = thread;
-		}
-		else{
-			waitlist_tail->nextlockwaiter = thread;
-			waitlist_tail = thread;
-		}
-		thread->nextlockwaiter = NULL;
-		if(ret == NULL){
-			return INVALID_THREAD_ID;
-		}
-		return ret->tid;
-		*/
+
 	}
 
 int InternalLock::next_owner(){
-		//Util::syncbarrier();
-		/*
-		ASSERT(waitlist_head != NULL, "")
-		if(waitlist_head == NULL || locked){
-			return INVALID_THREAD_ID;
-		}
-		return waitlist_head->tid;
-		*/
-	//if(locked){
-		//return INVALID_THREAD_ID;
-	//}
 
 	return threads[nextowner];
-	//if(readcursor == NULL){
-		//readcursor = waitlist_head;
-	//}
-	//ASSERT(readcursor != NULL, "")
-	//if(waitlist_head != readcursor){
-		//waitlist_head = readcursor;
-	//}
-	//return readcursor->tid;
+
 }
 
 void InternalLock::pop_owner(){
@@ -75,30 +40,6 @@ void InternalLock::pop_owner(){
 		if(nextowner >= MAX_THREAD_NUM){
 			nextowner = 0;
 		}
-		//return tid;
-
-		//printf("Thread %d push owner %d\n", waitlist_head->tid, waitlist_head->tid);
-		//Util::syncbarrier();
-
-		//if(readcursor == NULL){
-			//readcursor = waitlist_head;
-		//}
-		//ASSERT(readcursor != NULL, "")
-		//readcursor = readcursor->next;
-
-/*
-		//Util::spinlock(&ilock);
-		ASSERT(waitlist_head != NULL, "")
-		thread_info_t* next = waitlist_head->nextlockwaiter;
-		if(next != NULL){
-			waitlist_head = waitlist_head->nextlockwaiter;
-		}
-		//if(waitlist_head == NULL){
-			//waitlist_tail = NULL;
-		//}
-*/
-		//Util::unlock(&ilock);
-
 }
 
 void InternalLock::dumpOnwers(){

@@ -1084,13 +1084,14 @@ void HBRuntime::init(){
 }
 
 RRRuntime::RRRuntime(std::string file, int mode) : logfile (file){
-	std::cerr << "Running with Record&Replay System" << std::endl;
+	//std::cerr << "Running with Record&Replay System" << std::endl;
+	
 	metadata->getRuntimeStatus().setRunningMode(mode);
 	//this->setSyncPolicy(getSyncPolicy());
 }
 
 SyncPolicy* RRRuntime::createSyncPolicy(){
-	std::cerr << "Calling RRRuntime::createSyncPolicy() to create Record&Replay Sync Policy" << std::endl;
+	//std::cerr << "Calling RRRuntime::createSyncPolicy() to create Record&Replay Sync Policy" << std::endl;
 	void* buf = this->getMetadata()->meta_alloc(sizeof(RRSyncPolicy));
 	SyncPolicy* sp = new (buf) RRSyncPolicy(logfile);
 	return sp;

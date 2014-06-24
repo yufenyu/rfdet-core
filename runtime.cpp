@@ -21,18 +21,9 @@
 
 
 
-#ifdef UNUSED
-void reallocate_thread(){
-	//thread_info_t * thread = metadata->threads[tid];
-	while(!me->slices.isEmpty()){
-		sleep(1);
-	}
-	me->tid = INVALID_THREAD_ID;
-}
-#endif
 
-extern int stackwrites;
-extern int totalwrites;
+//extern int stackwrites;
+//extern int totalwrites;
 
 
 

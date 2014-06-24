@@ -17,21 +17,6 @@
 #include "runtime.h"
 #include "heaplayers.h"
 
-/*
-Heap* Heap::s_heap = NULL;
-Heap* Heap::initHeap(){
-	ASSERT(s_heap == NULL, "")
-	//s_heap = SimpleHeap::initHeap();
-	s_heap = MyHeap::getHeap();
-	fprintf(stderr, "Heap::initHeap OK!\n");
-	return s_heap;
-}
-
-Heap* Heap::appHeap(){
-	ASSERT(s_heap != NULL, "")
-	return s_heap;
-}
-*/
 
 Heap* Heap::getHeap(){
 	static void* buf = mmap(0, PAGE_ALIGN_UP(sizeof(MyHeap)), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -78,6 +63,7 @@ ZHeapDemo * getHeap (void) {
 
 Memory* MyBigHeapSource::_instance = NULL;
 
+/*
 extern "C"{
 
 	void* zmalloc(size_t sz){
@@ -88,4 +74,4 @@ extern "C"{
 		getHeap()->free(ptr);
 	}
 }
-
+*/

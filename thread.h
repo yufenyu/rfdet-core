@@ -100,9 +100,8 @@ typedef struct _thread_info_t {
 } thread_info_t;
 
 
-class _ThreadPrivateType{
-
-};
+//class _ThreadPrivateType{
+//};
 
 //_ThreadPrivateType privateData;
 
