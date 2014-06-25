@@ -90,8 +90,8 @@ int Strategy::deliver(int from, vector_clock* old_time, vector_clock* new_time, 
 			/* Copy the log entry.*/
 			//*empty_entry = flog;
 			//flog->incRefCount();
-
-			//latter->slices.slicepointer.checkDuplicate(flog, from, old_time, new_time, sync);
+			
+			latter->slices.slicepointer.checkDuplicate(flog, from, old_time, new_time, sync);
 
 			latter->slices.slicepointer.addSlice(flog);
 
@@ -118,14 +118,14 @@ int Strategy::deliver(int from, vector_clock* old_time, vector_clock* new_time, 
 int Strategy::doPropagation(int from, vector_clock* old_time, vector_clock* new_time, int type){
 
 #ifdef _PROFILING
-	uint64 starttime = Util::copy_time();
+	uint64_t starttime = Util::copy_time();
 #endif
 
 	int ret;
 	ret = deliver(from, old_time, new_time, type);
 
 #ifdef _PROFILING
-	uint64 endtime = Util::copy_time();
+	uint64_t endtime = Util::copy_time();
 	me->readlogtime += (endtime - starttime);
 #endif
 
@@ -146,7 +146,7 @@ int MProtectStrategy::endSlice(){
 		return 0;
 	}
 #ifdef _PROFILING
-	uint64 starttime = Util::copy_time();
+	uint64_t starttime = Util::copy_time();
 #endif
 
 	int ret;
@@ -166,7 +166,7 @@ int MProtectStrategy::endSlice(){
 	//ret = me->slices.recordMLog(); /*Log the diffs for this clock.*/
 
 #ifdef _PROFILING
-	uint64 endtime = Util::copy_time();
+	uint64_t endtime = Util::copy_time();
 	me->writelogtime += (endtime - starttime);
 #endif
 	return ret;

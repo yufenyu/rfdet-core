@@ -145,5 +145,5 @@ typedef struct runtime_data {
 
 #define CHUNK_SIZE (1048576UL * 8) //unused
 
-typedef unsigned long long uint64;
+//typedef unsigned long long uint64;
 #endif /* HBDEFINES_H_ */

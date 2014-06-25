@@ -49,8 +49,8 @@ using namespace std;
 extern int enterpass;
 extern int enterpassIteration;
 class Util{
-	static uint64 timekeeper;
-	static uint64 starttime;
+	static uint64_t timekeeper;
+	static uint64_t starttime;
 public:
 	static void spinlock(int* lock){
 		SPINLOCK_LOCK(lock);
@@ -101,37 +101,42 @@ public:
 		timekeeper = starttime;
 	}
 
-	static uint64 watch_time(){
+	static uint64_t watch_time(){
 		struct timeval  FullTime;
 		gettimeofday(&FullTime, NULL);
-		uint64 current = FullTime.tv_sec * 1000000 + FullTime.tv_usec;
-		uint64 interval = current - starttime;
+		uint64_t current = FullTime.tv_sec * 1000000 + FullTime.tv_usec;
+		uint64_t interval = current - starttime;
 		timekeeper = current;
 		return interval;
 	}
 
-	static uint64 record_time(){
+	static uint64_t record_time(){
 		struct timeval  FullTime;
 		gettimeofday(&FullTime, NULL);
-		uint64 current = FullTime.tv_sec * 1000000 + FullTime.tv_usec;
+		uint64_t current = FullTime.tv_sec * 1000000 + FullTime.tv_usec;
 		timekeeper = current;
 		return current;
 	}
 
-	static uint64 copy_time(){
+	static uint64_t copy_time(){
 		struct timeval  FullTime;
 		gettimeofday(&FullTime, NULL);
 		return FullTime.tv_sec * 1000000 + FullTime.tv_usec;
 	}
 
-	static uint64 time_interval(){
+	static uint64_t time_interval(){
 		struct timeval  FullTime;
 		gettimeofday(&FullTime, NULL);
-		uint64 current = FullTime.tv_sec * 1000000 + FullTime.tv_usec;
-		uint64 interval = current - timekeeper;
+		uint64_t current = FullTime.tv_sec * 1000000 + FullTime.tv_usec;
+		uint64_t interval = current - timekeeper;
 		return interval;
 	}
-
+	static void __attribute__((optimize("O0")))
+	halt(){
+		while(true){
+			wait_for_a_while();
+		}
+	}
 	static void __attribute__((optimize("O0")))  /** prevent optimization */
 	wait_for_a_while(){
 		//printf("wait for a while...\n");

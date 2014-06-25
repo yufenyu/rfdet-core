@@ -76,6 +76,7 @@ public:
 		owner = INVALID_THREAD_ID;
 		refcount = 0;
 		status = SLICE_UNUSED;
+		id = 0;
 	}
 	
 	Slice(){
@@ -83,6 +84,7 @@ public:
 		//oldowner = INVALID_THREAD_ID;
 		//id = global_id ++;
 		reset();
+		id = -1;
 	}
 
 
@@ -140,7 +142,7 @@ public:
 
 	/*Below are used for debugging*/
 	void dumpInfo(){
-		printf("<id=%d, status=%d, owner=%d, refcount=%d, time=%s\n",
+		fprintf(stderr, "<id=%d, status=%d, owner=%d, refcount=%d, time=%s\n",
 				id, status, owner, refcount, vtime.toString());
 	}
 
@@ -164,6 +166,8 @@ public:
 		semaphore = 0;
 		gc_threshold = GC_THRESHOLD_STEP;
 	}
+	
+	void checkDuplicate(); //debugging function
 	void initOnThreadEntry();
 	Slice** readerAcquire(int* num);
 	void readerRelease();

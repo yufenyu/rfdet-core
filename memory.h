@@ -116,7 +116,7 @@ class PageSizeMemory : public Memory{
 		//int owner;
 		PageMemory* freelistHead;
 		PageMemory* freelistTail;
-		uint64 allocatedpages;
+		uint64_t allocatedpages;
 		LocalAllocator(){
 			reset();
 		}

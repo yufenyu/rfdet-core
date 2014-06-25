@@ -190,7 +190,7 @@ void HBRuntime::printResult(){
 	//metadata->memfootprint += Heap::appHeap()->getUsedMemory(me->tid);
 	metadata->gc_count += me->gc_count;
 	NORMAL_MSG("HBDet: finalize...\n");
-	uint64 etime = Util::watch_time();
+	uint64_t etime = Util::watch_time();
 	NORMAL_MSG("HBDet: Program elapse time: %lld\n", etime);
 	NORMAL_MSG("HBDet: page fault number: %u\n", metadata->numpagefault / metadata->thread_slot);
 	NORMAL_MSG("HBDet: GC count: %d\n", metadata->gc_count);
@@ -302,7 +302,7 @@ int HBRuntime::protectSharedData(){
 		return 0;
 	}
 #ifdef _PROFILING
-	uint64 starttime = Util::copy_time();
+	uint64_t starttime = Util::copy_time();
 #endif
 
 	DEBUG_MSG("Protect globals\n");
@@ -313,7 +313,7 @@ int HBRuntime::protectSharedData(){
 	//protectHeap();
 	
 #ifdef _PROFILING
-	uint64 endtime = Util::copy_time();
+	uint64_t endtime = Util::copy_time();
 	me->protecttime += (endtime - starttime);
 #endif
 	DEBUG_MSG("Heap protected\n");
@@ -333,7 +333,7 @@ int HBRuntime::unprotectSharedData(){
 		return 0;
 	}
 #ifdef _PROFILING
-	uint64 starttime = Util::copy_time();
+	uint64_t starttime = Util::copy_time();
 #endif
 	unprotectGlobals();/*Protect the global variables, log the differences.*/
 	//unprotect_heap();
@@ -341,7 +341,7 @@ int HBRuntime::unprotectSharedData(){
 	//unprotectHeap();
 
 #ifdef _PROFILING
-	uint64 endtime = Util::copy_time();
+	uint64_t endtime = Util::copy_time();
 	me->protecttime += (endtime - starttime);
 #endif
 	return 0;
@@ -365,7 +365,7 @@ bool HBRuntime::gcpoll(){
 
 int HBRuntime::GC(){
 #ifdef _PROFILING
-	uint64 starttime = Util::copy_time();
+	uint64_t starttime = Util::copy_time();
 #endif
 
 	int ret;
@@ -373,7 +373,7 @@ int HBRuntime::GC(){
 
 
 #ifdef _PROFILING
-	uint64 endtime = Util::copy_time();
+	uint64_t endtime = Util::copy_time();
 	me->gc_time += (endtime - starttime);
 #endif
 	return ret;
@@ -381,6 +381,7 @@ int HBRuntime::GC(){
 }
 
 int HBRuntime::clearGC(){
+	std::cout << "Calling clearGC" << std::endl;
 	me->slices.freeAllSlices();
 }
 
@@ -467,7 +468,15 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 	//}
 	while(next != me->tid){
 		if(is_happen_before){
-			predict_time.incClock(&lock->vtime, old_owner);
+			/** 
+			 * Below is the buggy code, causing a redundent propagation---a slice will be propagated
+			 * to its owner thread. We belive this code may also cause unordered slices pointers.
+			 * A thread will pull a slice ahead of time before the releasing thread acquires the lock.
+			 * Fix: using the next line (predict_time = lock->vtime;) instead. To optimize, we 
+			 * should set lock->vtime right after a thread acquires the lock.
+			//predict_time.incClock(&lock->vtime, old_owner);
+			 **/
+			predict_time = lock->vtime;
 			paracount += strategy->doPropagation(old_owner, &old_time, &predict_time, SYNC_LOCK);
 			//paracount += restoreSnapshot(old_owner, old_time, &predict_time, HB_REASON_LOCK);
 		}
@@ -493,6 +502,8 @@ int HBRuntime::rawMutexLock(pthread_mutex_t * mutex, int synctype, bool usercall
 		//dump_data();
 	}
 
+	lock->vtime = me->vclock; //Used to fix the duplicate-slice bug.
+	
 #ifdef _PROFILING
 	me->paracount += paracount;
 	me->serialcount += serialcount;
@@ -1116,6 +1127,8 @@ int RRRuntime::threadExit(){
 
 void RRRuntime::printResult(){
 	uint64_t elapsetime = Util::watch_time();
+	std::cout << "Prelock optimization: " << 
+				(double)me->paracount / (me->paracount + me->serialcount) << std::endl;
 	std::cout << "Program elapse time: " << elapsetime << std::endl;
 }
 

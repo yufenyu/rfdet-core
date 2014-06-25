@@ -27,8 +27,8 @@
 
 
 
-uint64 Util::timekeeper = 0;
-uint64 Util::starttime = 0;
+uint64_t Util::timekeeper = 0;
+uint64_t Util::starttime = 0;
 
 extern char *program_invocation_short_name;
 char* _Runtime::getAppname(){

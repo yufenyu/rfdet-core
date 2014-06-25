@@ -24,38 +24,6 @@ int SliceManager::initOnThreadEntry(){
 }
 
 
-#ifdef UNUSED
-/*Allocate a Slice in the thread local buffer for this thread.*/
-Slice* SliceManager::allocLocalEntry(){
-	//if(entrylist == NULL){
-		//init();
-	//}
-	ASSERT(slicelist != NULL, "")
-	Slice* log = &slicelist[freeSliceEntry];
-	if(log->isUsed()){
-		NORMAL_MSG("HBDet: ran out of Slice! try GC...\n");
-		GC();
-		log = &slicelist[freeSliceEntry];
-		if(log->isUsed()){
-			VATAL_MSG("HBDet fatal error: ran out of Slice! Failed\n");
-			exit(0);
-		}
-	}
-
-	log->setUsed(true);
-	log->setOwner(me->tid);
-	log->status = SLICE_FILLING;
-
-	freeSliceEntry ++;
-	if(freeSliceEntry >= MAX_LOGENTRY_NUM){
-		freeSliceEntry = 0;
-	}
-
-	usedEntryCount ++;
-	return log;
-}
-#endif
-
 Slice* SliceManager::NewSlice(){
 	Slice* slice = NULL;
 	/*
@@ -126,7 +94,7 @@ void SliceManager::killSlice(Slice* s){
 }
 
 void SliceManager::disposeDeads(){
-	ASSERT(this == &me->slices, "")
+	ASSERT(this == &me->slices, "SlickManager points to other thread's data");
 
 	Slice* s = deadlist;
 	Slice* next = NULL;
@@ -134,6 +102,9 @@ void SliceManager::disposeDeads(){
 	while(s != NULL){
 		next = s->next;
 		if(s->getRefCount() == 0){
+			if(s->getOwner() != me->tid){
+				s->dumpInfo();
+			}
 			ASSERT(s->getOwner() == me->tid, "Thread (%d) disposed a dead slice(%d)", 
 					me->tid, s->getOwner())
 			this->freeSlice(s);
@@ -305,6 +276,8 @@ int SliceManager::GC(){/*Perform garbage collection of logs.*/
 	int slicenum;
 	int count = 0;
 	Slice** lpointers = slicepointer.readerAcquire(&slicenum);
+	//slicepointer.checkDuplicate();
+	
 	for(int i = 0; i < slicenum; i++){
 		Slice* slice = lpointers[i];
 		ASSERT(slice->isUsed(), "")
@@ -376,10 +349,10 @@ void SliceManager::freeAllSlices(){
 
 void Slice::forceFreeEntry(){
 	ASSERT(false, "not implemented")
-	if(this->owner == me->tid){
-		modifications.freeData();
-		this->reset();
-	}
+	//if(this->owner == me->tid){
+		//modifications.freeData();
+		//this->reset();
+	//}
 }
 
 int Slice::freeEntry(){
@@ -495,6 +468,18 @@ int SliceSpace::freeSlices(Slice* s){
 	return 0;
 }
 
+/*Check if there is duplicate slice pointers. Used for debugging. */
+void SlicePointer::checkDuplicate(){
+	for(int i = pointstart; i < pointend; i++){
+		for(int j = i + 1; j < pointend; j ++){
+			if(pointers[i] == pointers[j]){
+				std::cerr << "Duplicate slice pointers: " << std::endl;
+				pointers[i]->dumpInfo();
+				ASSERT(false, "\n");
+			}
+		}
+	}
+}
 
 Slice** SlicePointer::readerAcquire(int* num){
 	Util::spinlock(&lock);
@@ -504,6 +489,8 @@ Slice** SlicePointer::readerAcquire(int* num){
 	*num = this->pointend - this->pointstart;
 	return pointers + pointstart;
 }
+
+
 
 void SlicePointer::readerRelease(){
 	Util::spinlock(&lock);
@@ -553,14 +540,18 @@ void SlicePointer::checkDuplicate(Slice* s, int from, vector_clock* old_time, ve
 		fprintf(stderr, "propagate from %d to %d: old_time=%s, new_timd=%s\n",
 				from, me->tid, time1, time2);
 		s->dumpInfo();
+		Util::halt();
 	}
 
 	for(int i = 0; i < pointend; i ++){
 		if(s == pointers[i]){
+			printf("Thread %d Deplicate Slice Error: a slice is already in the slicepointers", me->tid);
 			s->dumpInfo();
-			ASSERT(false, "Thread %d Deplicate Slice Error: a slice is already in the slicepointers", me->tid)
+			Util::halt();
+			ASSERT(false, "Thread %d Deplicate Slice Error: a slice is already in the slicepointers", me->tid);
 		}
 	}
+	
 }
 
 int SlicePointer::addSlice(Slice* s){
