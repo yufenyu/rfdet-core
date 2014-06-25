@@ -237,47 +237,12 @@ int SliceManager::GC(){/*Perform garbage collection of logs.*/
 	//Util::record_time();
 
 	//printf("\n////////////////////////////////Thread(%d): GC start...////////////////////////////////////\n", me->tid);
-
-
-#ifdef UNUSED
-	int count = 0;
-	for(int i = 0; i < slicePointerNum; i++){ //There is no modification.
-		//printf("A log(%s) is ", log->vtime.toString());
-		Slice* slice = this->slicepointers[i];
-		//Util::spinlock(&metadata->lock);
-		//if(log->getOnwer() != me->tid){
-		//	printf("Error: log->getOnwer(%d) != me->tid\n", log->getOnwer(), me->tid);
-		//	exit(0);
-		//}
-		if(slice->isUsed() && !slice->isValid()){
-			count += slice->freeEntry();
-			if(slice->getOwner() == me->tid){
-				if(slice->getRefCount() == 0){
-					this->freeSlice(slice);
-				}
-				else{
-					this->killSlice(slice);
-				}
-			}
-			//this->reclaimSlice(s);
-
-#if (READLIST_CONFIG == _SINGLE_READLIST)
-			this->slicepointers[i] = NULL;
-#else if (READLIST_CONFIG == _MULTI_READLIST)
-			if(!slice->isUsed()){
-				this->slicepointers[i] = NULL;
-			}
-#endif
-		}
-
-	}
-#endif
-
 	int slicenum;
 	int count = 0;
 	Slice** lpointers = slicepointer.readerAcquire(&slicenum);
-	//slicepointer.checkDuplicate();
-	
+#ifdef RUNTIME_SELF_CHECK
+	slicepointer.checkDuplicate();
+#endif
 	for(int i = 0; i < slicenum; i++){
 		Slice* slice = lpointers[i];
 		ASSERT(slice->isUsed(), "")

@@ -68,10 +68,9 @@ public:
 		reset();
 	}
 	void DEBUG_VALUE(){
-#ifdef _DEBUG
 		printf("<%lu, %lu, %lu>", clocks[0], clocks[1], clocks[2]);
-#endif
 	}
+	
 #define VECTOR_CLOCK_LEN 5
 	void DEBUG_TIME(int tid){
 		//printf("Thread(%d) inc (%d): ", me->tid, tid);

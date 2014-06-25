@@ -77,7 +77,7 @@ static _Runtime* GetRuntime(){
 		size_t metadatsize = sizeof(PthreadRuntime) + PAGE_SIZE;
 		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 		if(mapped == (void*)-1){
-			DEBUG("Error: cannot allocate memory for meta data!\n");
+			VATAL_MSG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
 		PthreadRuntime* rt = new (mapped) PthreadRuntime ();
@@ -87,7 +87,7 @@ static _Runtime* GetRuntime(){
 		size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
 		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 		if(mapped == (void*)-1){
-			DEBUG("Error: cannot allocate memory for meta data!\n");
+			VATAL_MSG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
 		HBRuntime* rt = new (mapped) HBRuntime ();
@@ -97,7 +97,7 @@ static _Runtime* GetRuntime(){
 		size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
 		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 		if(mapped == (void*)-1){
-			DEBUG("Error: cannot allocate memory for meta data!\n");
+			VATAL_MSG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
 		RRRuntime* rt = new (mapped) RRRuntime (appname, Mode_Record);
@@ -107,7 +107,7 @@ static _Runtime* GetRuntime(){
 		size_t metadatsize = sizeof(HBRuntime) + PAGE_SIZE;
 		void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 		if(mapped == (void*)-1){
-			DEBUG("Error: cannot allocate memory for meta data!\n");
+			VATAL_MSG("Error: cannot allocate memory for meta data!\n");
 			_exit(1);
 		}
 		RRRuntime* rt = new (mapped) RRRuntime (appname, Mode_Replay);
@@ -119,7 +119,7 @@ NotFoundEnv:
 	size_t metadatsize = sizeof(PthreadRuntime) + PAGE_SIZE;
 	void* mapped = mmap(NULL, metadatsize, PROT_READ | PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 	if(mapped == (void*)-1){
-		DEBUG("Error: cannot allocate memory for meta data!\n");
+		VATAL_MSG("Error: cannot allocate memory for meta data!\n");
 		_exit(1);
 	}
 	_Runtime* rt = new (mapped) PthreadRuntime ();
@@ -158,8 +158,7 @@ void finalize() {
 ////////////////////////////////////////Hooked Functions////////////////////////////////////////////////////
 extern "C" {
 
-//#define ENABLE_MALLOC_HOOK
-#ifdef ENABLE_MALLOC_HOOK
+
 
 /**
  * Fixed bug!!!: We should not call assert in malloc as assert is going to call malloc, which results in
@@ -273,7 +272,6 @@ void * realloc(void * ptr, size_t sz) {
 
 	return NULL;
 }
-#endif
 
 
 int pthread_create (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg) {
@@ -293,7 +291,7 @@ int pthread_attr_destroy(pthread_attr_t *attr){
 	return 0;
 }
 
-#ifdef ENABLE_PTHREAD_HOOK
+
 int pthread_join(pthread_t tid, void ** val) {
 	//printf("HBDet: calling pthread_join, initialized = %d\n", initialized);
 	ASSERT(initialized, "")
@@ -317,12 +315,9 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 	if(!initialized){
 		return 0;
 	}
-#ifdef USING_INTERNAL_LOCK
 	int ret = RUNTIME->mutexLock(mutex);
 	return ret;
-#else
-	return real_pthread_mutex_lock(mutex);
-#endif
+
 }
 
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
@@ -337,12 +332,8 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 		return 0;
 	}
 	int ret = 0;
-#ifdef USING_INTERNAL_LOCK
 	ret = RUNTIME->mutexUnlock(mutex);
 
-#else
-	ret = real_pthread_mutex_unlock(mutex);
-#endif
 	return ret;
 }
 
@@ -351,10 +342,7 @@ pthread_t pthread_self(void) {
 	if(me != NULL){
 		return me->tid;
 	}
-	fprintf(stderr, "Error: calling pthread_self before initializing!\n");
-#ifdef _DEBUG
-	exit(0);
-#endif
+	ASSERT(false, "Error: calling pthread_self before initializing!\n");
 	return INVALID_THREAD_ID;
 }
 
@@ -433,7 +421,7 @@ int pthread_barrier_wait(pthread_barrier_t* barrier) {
 	return RUNTIME->barrier_wait(barrier);
 }
 
-#endif
+
 
 
 //__thread void* wsbuffer[1024*1024];

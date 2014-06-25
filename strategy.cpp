@@ -90,18 +90,18 @@ int Strategy::deliver(int from, vector_clock* old_time, vector_clock* new_time, 
 			/* Copy the log entry.*/
 			//*empty_entry = flog;
 			//flog->incRefCount();
-			
+#ifdef RUNTIME_SELF_CHECK
 			latter->slices.slicepointer.checkDuplicate(flog, from, old_time, new_time, sync);
-
+#endif
 			latter->slices.slicepointer.addSlice(flog);
 
 			//signal_up --;
 			count += mergeSlice(flog);
 
 			me->oldtime.setBigger(&flog->vtime, flog->getOwner());
-			DEBUG("Thread(%d) merge LogEntry(%x)[%d", me->tid, flog, flog->getOwner());
-			flog->vtime.DEBUG_VALUE();
-			DEBUG("]\n");
+			//DEBUG_MSG("Thread(%d) merge LogEntry(%x)[%d", me->tid, flog, flog->getOwner());
+			//flog->vtime.DEBUG_VALUE();
+			//DEBUG_MSG("]\n");
 			validlog ++;
 
 			//logs[j] = logs[i];

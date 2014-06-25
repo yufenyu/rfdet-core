@@ -610,8 +610,7 @@ int HBRuntime::threadCreate (pthread_t * pid, const pthread_attr_t * attr, void 
 
 	/*Add this thread to the active list*/
 	me->insertToActiveList(thread);
-//#endif
-//#ifdef MULTI_ADDRESS_SPACE
+
 	//printf("HBDet: before mmap!\n");
 	char* child_stack = (char *) mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 	if(child_stack == NULL){

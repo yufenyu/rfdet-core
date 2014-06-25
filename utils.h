@@ -173,12 +173,6 @@ public:
 };
 
 
-#ifdef _DEBUG
-    #define DEBUG(...) fprintf(stderr, "%20s:%-4d: ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n")
-#else
-    #define DEBUG(_fmt, ...)
-#endif
-
 
 
 #if HB_VERBOSE_LEVEL >= NORMAL_MSG_LEVEL
