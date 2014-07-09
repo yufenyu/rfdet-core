@@ -49,7 +49,7 @@ static bool initialized = false;
 _Runtime* RUNTIME;
 
 static _Runtime* GetRuntime(){
-	
+
 	char* rtconfig = getenv("DETRT_CONFIG");
 	//fprintf(stderr, "App name: %s\n", program_invocation_name);
 	//fprintf(stderr, "App short name: %s\n", program_invocation_short_name);
@@ -180,7 +180,7 @@ void * malloc(size_t sz) {
 		}
 	}
 	else{
-		//WARNING_MSG("malloc, sz = %d\n", sz);
+		//printf("malloc, sz = %d\n", sz);
 		//ptr = Heap::getHeap()->malloc(sz);
 		ptr = RUNTIME->malloc(sz);
 		//ptr = getHeap()->malloc(sz);
@@ -277,24 +277,24 @@ void * realloc(void * ptr, size_t sz) {
 int pthread_create (pthread_t * pid, const pthread_attr_t * attr, void *(*fn) (void *), void * arg) {
 	DEBUG_MSG("HBDet pthread_create\n");
 	//exit(0);
-	ASSERT(initialized, "")
+	ASSERT(initialized, "pthread_create not initialized.");
 	return RUNTIME->threadCreate(pid, attr, fn, arg);
 }
 
 int pthread_attr_init(pthread_attr_t *attr){
-	ASSERT(initialized, "")
+	ASSERT(initialized, "not implemented");
 	return real_pthread_attr_init(attr);
 }
 
 int pthread_attr_destroy(pthread_attr_t *attr){
-	ASSERT(initialized, "")
+	ASSERT(initialized, "not implemented");
 	return 0;
 }
 
 
 int pthread_join(pthread_t tid, void ** val) {
 	//printf("HBDet: calling pthread_join, initialized = %d\n", initialized);
-	ASSERT(initialized, "")
+	ASSERT(initialized, "pthread_join not initialized");
 	//*val = NULL;
 	//printf("HBDet: before calling threadJoin\n");
 	int ret = RUNTIME->threadJoin(tid, val);
@@ -306,6 +306,7 @@ int pthread_join(pthread_t tid, void ** val) {
 }
 
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t * attr) {
+	ASSERT(initialized, "pthread_mutex_init not initialized");
 	int ret = RUNTIME->mutexInit(mutex, attr);
 	return ret;
 }
@@ -321,7 +322,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 }
 
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-	//ASSERT(false, "pthread_mutex_trylock is not implemented!\n")
+	ASSERT(initialized, "pthread_mutex_trylock not initialized!\n")
 	int ret = RUNTIME->mutexTrylock(mutex);
 	return ret;
 }

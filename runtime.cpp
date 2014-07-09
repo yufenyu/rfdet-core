@@ -12,6 +12,12 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE         /* See feature_test_macros(7) */
+#endif
+#include <errno.h>
+
+
 #include "runtime.h"
 #include "common.h"
 #include "heaps.h"
@@ -32,14 +38,14 @@ uint64_t Util::starttime = 0;
 
 extern char *program_invocation_short_name;
 char* _Runtime::getAppname(){
+	ASSERT(program_invocation_short_name != NULL, "Cannot get app name\n");
 	return program_invocation_short_name;
 }
 
 	
 void PthreadRuntime::init(){
-	std::cout << "Running program " << this->getAppname() << " with pthreads..." << std::endl;
+	printf("Running program %s with pthreads\n", this->getAppname() );
 	init_real_functions();
-	
 }
 	
 int PthreadRuntime::finalize(){

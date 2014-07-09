@@ -74,7 +74,7 @@ public:
 		void* ret = SuperHeap::malloc(sz);
 		if (!IsSingleThread()) {
 			int err = mprotect(ret, PAGE_ALIGN_UP(sz), PROT_READ);
-			ASSERT(err == 0, "")
+			ASSERT(err == 0, "err != 0\n");
 		}
 		return ret;
 	}
@@ -189,7 +189,7 @@ public:
 		data(NULL), map(NULL), map_end(NULL) {
 		void* raw_mem = mmap(NULL, MY_HEAP_SIZE , PROT_READ | PROT_WRITE,
 				MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-		ASSERT(raw_mem != MAP_FAILED, "");
+		ASSERT(raw_mem != MAP_FAILED, "mmap failed");
 		init(raw_mem);
 
 		DEBUG_MSG("Init BigHeapSource, raw_mem = %p, MASK_0_111 = %p.\n", raw_mem, (void*)MASK_0_111);
@@ -223,7 +223,7 @@ public:
 	}
 
 	inline void * malloc(size_t sz) {
-		ASSERT(data != NULL, "");
+		ASSERT(data != NULL, "malloc failed, data = NULL\n");
 		MapItemType* next = map;
 		while (next != map_end) {
 			//printf("getSize(next) = %x\n", getSize(next));
@@ -301,7 +301,7 @@ class MyBigHeapSource : public BigHeapSource<HEAP_SIZE, PAGE_SIZE> {
 public:
 	MyBigHeapSource() {
 		//Super();
-		ASSERT(_instance == NULL, "")
+		ASSERT(_instance == NULL, "_instance is NULL");
 		_instance = this;
 	}
 
@@ -491,7 +491,7 @@ public:
 	MyHeap() :
 		_memory(NULL) {
 		_memory = MyBigHeapSource::getInstance();
-		ASSERT(_memory != NULL, "")
+		ASSERT(_memory != NULL, "_memory is NULL");
 	}
 
 	virtual void* malloc(size_t sz) {

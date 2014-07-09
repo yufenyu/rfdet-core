@@ -57,7 +57,7 @@ InternalLock* InternalLockMap::createMutex(void* mutex){
  * Hence, the flag "kernal_malloc" should be set before the read and write of lockMap.
  */
 InternalLock* InternalLockMap::FindOrCreateLock(void* mutex){
-	ASSERT(mutex != NULL, "")
+	ASSERT(mutex != NULL, "mutex = NULL");
 	//printf("FindOrCreateLock: enter critical section\n");
 	map <void*, InternalLock*> :: const_iterator iter;
 	//kernal_malloc = true;
@@ -99,7 +99,7 @@ InternalCond* InternalCondsMap::createCond(void* cond){
 }
 
 InternalCond* InternalCondsMap::findOrCreateCond(void* cond){
-	ASSERT(cond != NULL, "")
+	ASSERT(cond != NULL, "cond = NULL");
 	//SPINLOCK_LOCK(&lock);
 	
 	GetHBRuntime()->getThreadPrivate()->SetKernalMalloc(true);
@@ -203,7 +203,7 @@ void HBRuntime::printResult(){
 }
 
 void HBRuntime::printWelcomeMsg(){
-	std::cout << "Running program " << this->getAppname() << " with RaceFree...\n" << std::endl;
+	printf("Running program %s with RaceFee...\n" , this->getAppname() );
 }
 
 int HBRuntime::finalize(){
@@ -787,7 +787,7 @@ int HBRuntime::condWait(pthread_cond_t * cond, pthread_mutex_t * mutex){
 	NORMAL_MSG("Thread %d wait at cond(%x)\n", me->tid, cond);
 	icond->Wait(me); /*Wait here!*/
 	NORMAL_MSG("Thread %d wake up\n", me->tid);
-	ASSERT(icond->sender != INVALID_THREAD_ID, "");
+	ASSERT(icond->sender != INVALID_THREAD_ID, "icond->sender error");
 
 	/*Wake up!!!*/
 	me->vclock.incClock(&icond->vtime, icond->sender);
@@ -1132,15 +1132,15 @@ void RRRuntime::printResult(){
 }
 
 void RRRuntime::printWelcomeMsg(){
-	std::string mode;
+	std::string mode = "Error mode";
 	if(this->IsRecording()){
 		mode = "Recording...";
 	}
 	else if(this->IsReplaying()){
 		mode = "Replaying...";
 	}
-	std::cout << "Running program " << 
-				this->getAppname() << " with " << mode << std::endl;
+
+	printf("Running program %s with %s\n", this->getAppname(), mode.c_str());
 }
 
 DMTRuntime::DMTRuntime(){

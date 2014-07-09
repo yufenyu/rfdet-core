@@ -56,5 +56,5 @@ clean:
 	rm -f ${TARGET}
 	
 install:
-	cp ${TARGET} /home/zhouxu/lib
+	cp ${TARGET} /home/zhouxu/lib/
 #	cp ${INSHEADER} /home/zhouxu/include

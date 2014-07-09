@@ -20,7 +20,7 @@
 
 Heap* Heap::getHeap(){
 	static void* buf = mmap(0, PAGE_ALIGN_UP(sizeof(MyHeap)), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-	ASSERT(buf != NULL, "")
+	ASSERT(buf != NULL, "mmap failed");
 	static Heap* heap = new (buf) MyHeap;
 	return heap;
 }

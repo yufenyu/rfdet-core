@@ -245,7 +245,7 @@ int SliceManager::GC(){/*Perform garbage collection of logs.*/
 #endif
 	for(int i = 0; i < slicenum; i++){
 		Slice* slice = lpointers[i];
-		ASSERT(slice->isUsed(), "")
+		ASSERT(slice->isUsed(), "slice is used");
 		if(!slice->isValid()){
 			slice->freeEntry();
 			if(slice->getOwner() == me->tid){
