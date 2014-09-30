@@ -267,7 +267,7 @@ int HBRuntime::threadEntryPoint(void* args){
 
 	
 #ifdef _GDB_DEBUG
-	printf("Thread(%d): sleep for attach...\n", me->tid, me->pid);
+	printf("Thread(%d): sleep for attach..., pid = %d\n", me->tid, me->pid);
 	sleep(20);
 #endif
 

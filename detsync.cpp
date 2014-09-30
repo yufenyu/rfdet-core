@@ -149,6 +149,9 @@ void RRSyncPolicy::writeLog(int tid, uint64_t locknum, uint64_t version, uint32_
 	log.failednum = failednum;
 	size_t ret = fwrite(&log, sizeof(log), 1, file);
 	ASSERT(ret == 1, "Write log failed, write %zu bytes\n", ret);
+#ifndef _OPTIMIZATION
+	fflush(file);
+#endif
 }
 
 
