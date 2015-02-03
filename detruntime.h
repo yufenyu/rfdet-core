@@ -235,6 +235,8 @@ public: /* Multithreading interface methods */
 	virtual int condSignal(pthread_cond_t * cond);
 	virtual int condBroadcast(pthread_cond_t * cond);
 	virtual int barrier_wait(pthread_barrier_t* barrier);
+	virtual int barrier_init(pthread_barrier_t *__restrict barrier,
+      const pthread_barrierattr_t *__restrict attr, unsigned count);
 
 	virtual void * malloc(size_t sz);
 	virtual void  free(void * addr);

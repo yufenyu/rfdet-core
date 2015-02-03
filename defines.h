@@ -40,7 +40,7 @@
 #define HB_VERBOSE_LEVEL 1
 
 
-#define _GDB_DEBUG
+//#define _GDB_DEBUG
 //#define RUNTIME_SELF_CHECK
 //#define _OPTIMIZATION
 #ifdef RUNTIME_SELF_CHECK

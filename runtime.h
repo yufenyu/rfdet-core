@@ -86,7 +86,9 @@ public: //Interface methods:
 	virtual int condSignal(pthread_cond_t * cond) = 0;
 	virtual int condBroadcast(pthread_cond_t * cond) = 0;
 	virtual int barrier_wait(pthread_barrier_t* barrier) = 0;
-	
+	virtual int barrier_init(pthread_barrier_t * __restrict barrier,
+      const pthread_barrierattr_t * __restrict attr, unsigned count) = 0;
+
 	virtual void init() = 0;
 };
 
@@ -121,6 +123,8 @@ public:
 	virtual int condBroadcast(pthread_cond_t * cond);
 	//virtual int barrierImpl(int tnum);
 	virtual int barrier_wait(pthread_barrier_t* barrier);
+	virtual int barrier_init(pthread_barrier_t *__restrict barrier,
+      const pthread_barrierattr_t *__restrict attr, unsigned count);
 	
 };
 

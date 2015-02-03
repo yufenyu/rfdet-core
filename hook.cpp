@@ -62,7 +62,8 @@ int (*real_pthread_cond_broadcast)(pthread_cond_t*);
 int (*real_pthread_cond_destroy)(pthread_cond_t*);
 
 // pthread barriers
-int (*real_pthread_barrier_init)(pthread_barrier_t*, pthread_barrierattr_t*, unsigned int);
+int (*real_pthread_barrier_init)(pthread_barrier_t*__restrict,
+		const pthread_barrierattr_t*__restrict, unsigned int);
 int (*real_pthread_barrier_wait)(pthread_barrier_t*);
 int (*real_pthread_barrier_destroy)(pthread_barrier_t*);
 

@@ -67,7 +67,7 @@ extern int (*real_pthread_cond_broadcast)(pthread_cond_t*);
 extern int (*real_pthread_cond_destroy)(pthread_cond_t*);
 
 // pthread barriers
-extern int (*real_pthread_barrier_init)(pthread_barrier_t*, pthread_barrierattr_t*, unsigned int);
+extern int (*real_pthread_barrier_init)(pthread_barrier_t*__restrict, const pthread_barrierattr_t*__restrict, unsigned int);
 extern int (*real_pthread_barrier_wait)(pthread_barrier_t*);
 extern int (*real_pthread_barrier_destroy)(pthread_barrier_t*);
 

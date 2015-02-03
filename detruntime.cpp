@@ -966,6 +966,8 @@ int HBRuntime::barrier_wait(pthread_barrier_t* barr){
 	NORMAL_MSG("Thread %d enter barrier, tnum = %d\n", me->tid, ibarrier->left);
 
 	//beforeBarrier();
+	//printf("ibarrier->left = %d\n", ibarrier->left);
+
 	int last = barrierImpl(ibarrier->left);
 	//afterBarrier();
 	//ASSERT(false, "HBRuntime::barrier_wait has not been implemented yet.\n");
@@ -976,6 +978,11 @@ int HBRuntime::barrier_wait(pthread_barrier_t* barr){
 	strategy->beginSlice();
 
 	me->insync = false;
+}
+
+int HBRuntime::barrier_init(pthread_barrier_t *__restrict barrier,
+    const pthread_barrierattr_t *__restrict attr, unsigned count){
+	return real_pthread_barrier_init(barrier, attr, count);
 }
 
 bool HBRuntime::isSharedMemory(void* addr){

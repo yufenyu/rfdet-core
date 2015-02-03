@@ -422,6 +422,11 @@ int pthread_barrier_wait(pthread_barrier_t* barrier) {
 	return RUNTIME->barrier_wait(barrier);
 }
 
+int pthread_barrier_init(pthread_barrier_t *__restrict barrier,
+              const pthread_barrierattr_t *__restrict attr, unsigned count){
+	return RUNTIME->barrier_init(barrier, attr, count);
+}
+
 
 
 

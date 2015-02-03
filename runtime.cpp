@@ -118,5 +118,8 @@ int PthreadRuntime::condBroadcast(pthread_cond_t * cond){
 int PthreadRuntime::barrier_wait(pthread_barrier_t* barrier){
 	return real_pthread_barrier_wait(barrier);
 }
-
+int PthreadRuntime::barrier_init(pthread_barrier_t *__restrict barrier,
+    const pthread_barrierattr_t *__restrict attr, unsigned count){
+	return real_pthread_barrier_init(barrier, attr, count);
+}
 
